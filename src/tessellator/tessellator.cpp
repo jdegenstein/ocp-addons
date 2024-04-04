@@ -1,29 +1,4 @@
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <numeric>
-#include <chrono>
-
-#include <BRep_Builder.hxx>
-#include <BRepTools.hxx>
-#include <BRepMesh_IncrementalMesh.hxx>
-#include <TopExp_Explorer.hxx>
-#include <TopExp.hxx>
-#include <TopoDS.hxx>
-#include <TopoDS_Shape.hxx>
-#include <TopoDS_Face.hxx>
-#include <TopoDS_Edge.hxx>
-#include <TopoDS_Vertex.hxx>
-#include <BinTools.hxx>
-#include <IMeshTools_Parameters.hxx>
-#include <Poly_Triangulation.hxx>
-#include <Poly_PolygonOnTriangulation.hxx>
-#include <BRepGProp_Face.hxx>
-#include <TopTools_IndexedMapOfShape.hxx>
-#include <BRepAdaptor_Surface.hxx>
-#include <BRepAdaptor_Curve.hxx>
-
-#include "tessellate.h"
+#include "tessellator.h"
 
 auto get_timer() {
     return std::chrono::high_resolution_clock::now();
@@ -412,35 +387,3 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
     return result;
 }
 
-PYBIND11_MODULE(ocp_addons, m) {
-    
-    py::class_<MeshData>(m, "MeshData")
-        .def_readonly("vertices", &MeshData::vertices)
-        .def_readonly("normals", &MeshData::normals)
-        .def_readonly("triangles", &MeshData::triangles)
-        .def_readonly("face_types", &MeshData::face_types)
-        .def_readonly("triangles_per_face", &MeshData::triangles_per_face)
-        .def_readonly("segments", &MeshData::segments)
-        .def_readonly("segments_per_edge", &MeshData::segments_per_edge)
-        .def_readonly("edge_types", &MeshData::edge_types)
-        .def_readonly("obj_vertices", &MeshData::obj_vertices);
-
-    m.doc() = R"pbdoc(
-        OCP addons
-        ----------
-
-        .. currentmodule:: ocp_addons
-
-        .. autosummary::
-           :toctree: _generate
-
-           add
-           subtract
-    )pbdoc";
-
-    m.def("tessellate", &tessellate, R"pbdoc(
-        Tessellate a shape
-
-        Tessellate OCP object with a native function via pybind11 and arrow
-    )pbdoc");
-}
