@@ -84,7 +84,6 @@ class bdist_wheel_repaired(wheel.bdist_wheel.bdist_wheel):
         super().run()
         system = platform.system()
         machine = consistent_machine()
-        os.environ["CXX"] = f"{machine}-conda-linux-gnu-g++"
         ##
         # conda = "conda.bat" if platform.system() == "Windows" else "conda"#UNCOMMENT
         conda = "micromamba"  # DELETEME
@@ -98,6 +97,7 @@ class bdist_wheel_repaired(wheel.bdist_wheel.bdist_wheel):
         out_path = os.path.join(self.dist_dir, "repaired")
         ##
         if system == "Linux":
+            os.environ["CXX"] = f"{machine}-conda-linux-gnu-g++"
             repair_wheel_linux(lib_path, bad_wheel_filename, out_path, machine)
         elif system == "Darwin":
             repair_wheel_macos(lib_path, bad_wheel_filename, out_path, machine)
