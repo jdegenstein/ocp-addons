@@ -13,13 +13,17 @@ if platform.system() == "Linux":
 ext_modules = [
     Pybind11Extension(
         "ocp_addons",
-        ["src/tessellator/tessellate.cpp"],
+        [
+            "src/tessellator/tessellator.cpp", 
+            "src/serializer/serializer.cpp",
+            "src/main.cpp"
+        ],
         define_macros=[
             ("VERSION_INFO", __version__),
             ("DESCRIPTION", description),
         ],
         include_dirs = [os.path.join(sys.prefix, "include/opencascade")],
-        libraries = ["TKG3d", "TKTopAlgo", "TKMesh"],
+        libraries = ["TKG3d", "TKTopAlgo", "TKMesh", "TKBRep"],
         cxx_std = 17
     ),
 ]
