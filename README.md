@@ -34,6 +34,14 @@ mamba activate ocp-addons
     pip install delocate
     ```
 
+- MacOS (Windows)
+
+    ```bash
+    mamba install vs2019_win-64
+    pip install delvewheel
+    ```
+
+
 ## Build ocp-addons
 
 ### Build the pybind11 wheel

@@ -172,7 +172,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
 
     int num_faces = face_map.Extent();
 
-    FaceData face_list[num_faces];
+    FaceData* face_list = new FaceData[num_faces];
 
     int total_num_vertices = 0;
     int total_num_triangles = 0;
@@ -285,7 +285,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
 
     int total_num_segments = 0;
 
-    EdgeData edge_list[num_edges];
+    EdgeData* edge_list = new EdgeData[num_edges];
 
     // int edges_offset = 0;
     for (int i=0; i<num_edges; i++) {
@@ -348,7 +348,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
 
     int num_vertices = vertex_map.Extent();
 
-    Standard_Real vertex_list[3 * num_vertices];
+    Standard_Real* vertex_list = new Standard_Real[3 * num_vertices];
     for (int i = 0; i < num_vertices; i++) {
         const TopoDS_Vertex& topods_vertex = TopoDS::Vertex(vertex_map.FindKey(i+1));
         gp_Pnt p = BRep_Tool::Pnt(topods_vertex);
@@ -379,10 +379,13 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
         delete[] face_list[i].normals;
         delete[] face_list[i].triangles;
     }
+    delete[] face_list;
 
     for (int i=0; i<num_edges; i++) {
         delete[] edge_list[i].segments;
     }
+    delete[] edge_list;
+    delete[] vertex_list;
 
     return result;
 }

@@ -22,8 +22,25 @@ ext_modules = [
             ("VERSION_INFO", __version__),
             ("DESCRIPTION", description),
         ],
-        include_dirs = [os.path.join(sys.prefix, "include/opencascade")],
-        libraries = ["TKG3d", "TKTopAlgo", "TKMesh", "TKBRep"],
+        include_dirs = [
+            os.path.join(sys.prefix, "include", "opencascade"),
+            os.path.join(sys.prefix, "Library", "include", "opencascade"),
+        ],
+        library_dirs = [
+            os.path.join(sys.prefix, "Library", "lib"),
+        ],
+        libraries = [
+            "TKG3d",
+            "TKTopAlgo",
+            "TKMesh",
+            "TKBRep", 
+            "TKGeomAlgo",
+            "TKGeomBase",
+            "TKG2d",
+            "TKMath",
+            "TKShHealing",
+            "TKernel",
+        ],
         cxx_std = 17
     ),
 ]
