@@ -65,6 +65,12 @@ python -m build -n
         --wheel-dir=wheelhouse dist/ocp_addons-*_arm64.whl
     ```
 
+- Windows 
+
+    ```bash
+    python -m delvewheel repair --wheel-dir=wheelhouse dist\ocp_addons-0.1.0-cp311-cp311-win_amd64.whl
+    ```
+    
 ## Test the library
 
 ```bash
