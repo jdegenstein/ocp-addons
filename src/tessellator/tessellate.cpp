@@ -412,7 +412,8 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
     return result;
 }
 
-PYBIND11_MODULE(ocp_addons, m) {
+void register_tessellator(pybind11::module_ &m_gbl) {
+    auto m = m_gbl.def_submodule("tessellator");
     
     py::class_<MeshData>(m, "MeshData")
         .def_readonly("vertices", &MeshData::vertices)
@@ -426,16 +427,13 @@ PYBIND11_MODULE(ocp_addons, m) {
         .def_readonly("obj_vertices", &MeshData::obj_vertices);
 
     m.doc() = R"pbdoc(
-        OCP addons
-        ----------
+        OCP Tessellator
+        ---------------
 
         .. currentmodule:: ocp_addons
 
         .. autosummary::
            :toctree: _generate
-
-           add
-           subtract
     )pbdoc";
 
     m.def("tessellate", &tessellate, R"pbdoc(

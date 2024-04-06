@@ -13,7 +13,11 @@ if platform.system() == "Linux":
 ext_modules = [
     Pybind11Extension(
         "ocp_addons",
-        ["src/tessellator/tessellate.cpp"],
+        [
+            "src/modules.cpp",
+            "src/tessellator/tessellate.cpp",
+            "src/serializer/main.cpp"
+        ],
         define_macros=[
             ("VERSION_INFO", __version__),
             ("DESCRIPTION", description),
