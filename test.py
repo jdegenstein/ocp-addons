@@ -4,13 +4,16 @@ import os
 import sys
 import tempfile
 from time import time
+
 try:
     import cadquery as cq
+
     CQ = True
 except:
     CQ = False
 try:
     import build123d as bd
+
     BD = True
 except:
     BD = False

@@ -5,7 +5,7 @@ import os.path
 import platform
 
 __version__ = "0.1.0"
-description="Addon packages for OCP"
+description = "Addon packages for OCP"
 
 if platform.system() == "Linux":
     os.environ["CXX"] = "x86_64-conda-linux-gnu-g++"
