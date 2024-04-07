@@ -5,7 +5,7 @@ import os.path
 import platform
 
 __version__ = "0.1.0"
-description="Addon packages for OCP"
+description = "Addon packages for OCP"
 
 if platform.system() == "Linux":
     os.environ["CXX"] = "x86_64-conda-linux-gnu-g++"
@@ -15,16 +15,33 @@ ext_modules = [
         "ocp_addons",
         [
             "src/modules.cpp",
-            "src/tessellator/tessellate.cpp",
-            "src/serializer/main.cpp"
+            "src/tessellator/tessellator.cpp",
+            "src/serializer/main.cpp",
         ],
         define_macros=[
             ("VERSION_INFO", __version__),
             ("DESCRIPTION", description),
         ],
-        include_dirs = [os.path.join(sys.prefix, "include/opencascade")],
-        libraries = ["TKG3d", "TKTopAlgo", "TKMesh"],
-        cxx_std = 17
+        include_dirs=[
+            os.path.join(sys.prefix, "include", "opencascade"),
+            os.path.join(sys.prefix, "Library", "include", "opencascade"),
+        ],
+        library_dirs=[
+            os.path.join(sys.prefix, "Library", "lib"),
+        ],
+        libraries=[
+            "TKG3d",
+            "TKTopAlgo",
+            "TKMesh",
+            "TKBRep",
+            "TKGeomAlgo",
+            "TKGeomBase",
+            "TKG2d",
+            "TKMath",
+            "TKShHealing",
+            "TKernel",
+        ],
+        cxx_std=17,
     ),
 ]
 

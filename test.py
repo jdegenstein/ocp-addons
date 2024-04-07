@@ -4,13 +4,16 @@ import os
 import sys
 import tempfile
 from time import time
+
 try:
     import cadquery as cq
+
     CQ = True
 except:
     CQ = False
 try:
     import build123d as bd
+
     BD = True
 except:
     BD = False
@@ -22,7 +25,8 @@ from OCP.TopoDS import TopoDS_Shape
 
 sys.path.append("build")
 
-from ocp_addons import tessellate
+from ocp_addons.tessellator import tessellate
+
 
 def deserialize(buffer):
     if buffer is None:
@@ -88,7 +92,7 @@ else:
     if CQ:
         obj, acc, show = cq.Workplane().box(1, 2, 3).val().wrapped, 0.002, True
     elif BD:
-         obj, acc, show = bd.Box(1, 2, 3).wrapped, 0.002, True
+        obj, acc, show = bd.Box(1, 2, 3).wrapped, 0.002, True
 
 
 tt = time()

@@ -1,29 +1,4 @@
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <numeric>
-#include <chrono>
-
-#include <BRep_Builder.hxx>
-#include <BRepTools.hxx>
-#include <BRepMesh_IncrementalMesh.hxx>
-#include <TopExp_Explorer.hxx>
-#include <TopExp.hxx>
-#include <TopoDS.hxx>
-#include <TopoDS_Shape.hxx>
-#include <TopoDS_Face.hxx>
-#include <TopoDS_Edge.hxx>
-#include <TopoDS_Vertex.hxx>
-#include <BinTools.hxx>
-#include <IMeshTools_Parameters.hxx>
-#include <Poly_Triangulation.hxx>
-#include <Poly_PolygonOnTriangulation.hxx>
-#include <BRepGProp_Face.hxx>
-#include <TopTools_IndexedMapOfShape.hxx>
-#include <BRepAdaptor_Surface.hxx>
-#include <BRepAdaptor_Curve.hxx>
-
-#include "tessellate.h"
+#include "tessellator.h"
 
 auto get_timer() {
     return std::chrono::high_resolution_clock::now();
@@ -189,7 +164,6 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
     mesher.Perform();
     if(timeit) stop_timer(start, "Computing BRep incremental mesh");
 
-    int num = 0;
     TopLoc_Location loc;
 
     TopTools_IndexedMapOfShape face_map = TopTools_IndexedMapOfShape();
@@ -197,7 +171,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
 
     int num_faces = face_map.Extent();
 
-    FaceData face_list[num_faces];
+    FaceData* face_list = new FaceData[num_faces];
 
     int total_num_vertices = 0;
     int total_num_triangles = 0;
@@ -206,7 +180,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
 
     try {
         long offset = -1;
-        long triangle_count = 0;
+        // long triangle_count = 0;
 
         // long s = 0;
         for (int i = 0; i < num_faces; i++) {
@@ -265,7 +239,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
                     );
                 }
 
-                triangle_count += num_triangles * 3;
+                // triangle_count += num_triangles * 3;
                 
                 face_list[i].num_vertices = num_nodes;
                 face_list[i].num_triangles = num_triangles;
@@ -284,8 +258,6 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
                 face_list[i].num_triangles = 0;
                 face_list[i].face_type = -1;
             }
-
-            num++;
         }
     } catch (Standard_Failure& e) {
         std::cerr << "=> Standard_Failure: " << e.GetMessageString() << std::endl;
@@ -310,7 +282,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
 
     int total_num_segments = 0;
 
-    EdgeData edge_list[num_edges];
+    EdgeData* edge_list = new EdgeData[num_edges];
 
     // int edges_offset = 0;
     for (int i=0; i<num_edges; i++) {
@@ -373,7 +345,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
 
     int num_vertices = vertex_map.Extent();
 
-    Standard_Real vertex_list[3 * num_vertices];
+    Standard_Real* vertex_list = new Standard_Real[3 * num_vertices];
     for (int i = 0; i < num_vertices; i++) {
         const TopoDS_Vertex& topods_vertex = TopoDS::Vertex(vertex_map.FindKey(i+1));
         gp_Pnt p = BRep_Tool::Pnt(topods_vertex);
@@ -404,10 +376,13 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
         delete[] face_list[i].normals;
         delete[] face_list[i].triangles;
     }
+    delete[] face_list;
 
     for (int i=0; i<num_edges; i++) {
         delete[] edge_list[i].segments;
     }
+    delete[] edge_list;
+    delete[] vertex_list;
 
     return result;
 }
