@@ -1,6 +1,31 @@
+#include <iostream>
+#include <vector>
+#include <algorithm>
+#include <numeric>
+#include <chrono>
+
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <pybind11/numpy.h>
+
+#include <BRep_Builder.hxx>
+#include <BRepTools.hxx>
+#include <BRepMesh_IncrementalMesh.hxx>
+#include <TopExp_Explorer.hxx>
+#include <TopExp.hxx>
+#include <TopoDS.hxx>
+#include <TopoDS_Shape.hxx>
+#include <TopoDS_Face.hxx>
+#include <TopoDS_Edge.hxx>
+#include <TopoDS_Vertex.hxx>
+#include <BinTools.hxx>
+#include <IMeshTools_Parameters.hxx>
+#include <Poly_Triangulation.hxx>
+#include <Poly_PolygonOnTriangulation.hxx>
+#include <BRepGProp_Face.hxx>
+#include <TopTools_IndexedMapOfShape.hxx>
+#include <BRepAdaptor_Surface.hxx>
+#include <BRepAdaptor_Curve.hxx>
 
 namespace py = pybind11;
 
@@ -30,3 +55,6 @@ struct MeshData {
     py::array_t<int> edge_types;
     py::array_t<float> obj_vertices;
 };
+
+MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolerance, bool parallel, bool debug, bool timeit);
+
