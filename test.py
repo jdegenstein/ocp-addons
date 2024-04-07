@@ -92,7 +92,7 @@ else:
     if CQ:
         obj, acc, show = cq.Workplane().box(1, 2, 3).val().wrapped, 0.002, True
     elif BD:
-         obj, acc, show = bd.Box(1, 2, 3).wrapped, 0.002, True
+        obj, acc, show = bd.Box(1, 2, 3).wrapped, 0.002, True
 
 
 tt = time()
