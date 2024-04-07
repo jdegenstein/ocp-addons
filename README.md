@@ -24,7 +24,23 @@ mamba activate ocp-addons
     sudo apt-get update
     sudo apt-get install freetype* libfreetype6-dev libgl1-mesa-glx
     mamba install -c conda-forge gxx_linux-64=12
+    pip install auditwheel patchelf
     ```
+
+- MacOS (Apple Silicon)
+
+    ```bash
+    brew install automake
+    pip install delocate
+    ```
+
+- Windows (Intel)
+
+    ```bash
+    mamba install vs2019_win-64
+    pip install delvewheel
+    ```
+
 
 ## Build ocp-addons
 
@@ -42,6 +58,19 @@ python -m build -n
     auditwheel repair --plat manylinux_2_35_x86_64 dist/ocp_addons-*.whl
     ```
 
+- MacOS (Apple Silicon)
+
+    ```bash
+    DYLD_LIBRARY_PATH=$CONDA_PREFIX/lib python -m delocate.cmd.delocate_wheel \
+        --wheel-dir=wheelhouse dist/ocp_addons-*_arm64.whl
+    ```
+
+- Windows (Intel)
+
+    ```bash
+    python -m delvewheel repair --wheel-dir=wheelhouse dist\ocp_addons-0.1.0-cp311-cp311-win_amd64.whl
+    ```
+    
 ## Test the library
 
 ```bash
