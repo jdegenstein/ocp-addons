@@ -15,8 +15,8 @@ ext_modules = [
         "ocp_addons",
         [
             "src/modules.cpp",
-            "src/tessellator/tessellate.cpp",
-            "src/serializer/main.cpp"
+            "src/tessellator/tessellator.cpp",
+            "src/serializer/main.cpp",
         ],
         define_macros=[
             ("VERSION_INFO", __version__),
