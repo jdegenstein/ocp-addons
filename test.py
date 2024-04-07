@@ -25,7 +25,8 @@ from OCP.TopoDS import TopoDS_Shape
 
 sys.path.append("build")
 
-from ocp_addons import tessellate
+from ocp_addons.tessellator import tessellate
+
 
 def deserialize(buffer):
     if buffer is None:
