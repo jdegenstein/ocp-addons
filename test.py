@@ -18,6 +18,9 @@ try:
 except:
     BD = False
 
+if not (CQ or BD):
+    print("Must have CadQuery or build123d to run tests")
+
 from OCP.BinTools import BinTools
 from OCP.TopoDS import TopoDS_Shape
 
@@ -26,6 +29,7 @@ from OCP.TopoDS import TopoDS_Shape
 sys.path.append("build")
 
 from ocp_addons.tessellator import tessellate
+from ocp_addons import serializer
 
 
 def deserialize(buffer):
@@ -113,5 +117,7 @@ if show:
     for e in mesh["edges"]:
         print("  ", json.dumps(e.tolist()))
     print("obj_vertices:", mesh["obj_vertices"])
+    print("test serializer:", serializer._test())
+    print("test serializer OCCT shape:", serializer._testOCCT())
 
 print("overall:", int(1000 * (time() - tt)), "ms")
