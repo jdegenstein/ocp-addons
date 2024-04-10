@@ -49,6 +49,7 @@ ext_modules = [
             "TKernel",
         ],
         cxx_std=17,
+        extra_compile_args = ["-O3"],
     ),
 ]
 
