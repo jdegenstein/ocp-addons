@@ -11,8 +11,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ 'ubuntu-22.04', 'macos-11', 'macos-14' ] #, 'windows-2019' ] # macos-14 is arm64
-        python-version: [ '3.9', '3.10', '3.11', '3.12' ]
+        #os: [ 'ubuntu-22.04', 'macos-11', 'macos-14', 'windows-2019' ] # macos-14 is arm64
+        os: [ 'windows-2019' ] 
+        #python-version: [ '3.9', '3.10', '3.11', '3.12' ]
+        python-version: [ '3.11' ]
     steps:
 
       - name: Checkout project
@@ -44,6 +46,15 @@ jobs:
           brew install automake
           pip install delocate
 
+      - name: Install Windows Dependencies (x86_64)
+        if: ${{ matrix.os == 'windows-2019' }}
+        shell: bash -l {0}
+        run: |
+          micromamba install -c conda-forge vs2019_win-64
+          pip install delvewheel
+          micromamba info
+          micromamba list
+
       - name: Build Wheel # TODO: make/add cross-platform for Win especially
         shell: bash -l {0}
         run: |
@@ -60,6 +71,12 @@ jobs:
         shell: bash -l {0}
         run: |
           DYLD_LIBRARY_PATH=$CONDA_PREFIX/lib python -m delocate.cmd.delocate_wheel --wheel-dir=wheelhouse dist/ocp_addons*.whl
+
+      - name: Repair Windows Wheel (x86_64) # TODO: eliminate hardcoded GLIBC ver
+        if: ${{ matrix.os == 'windows-2019' }}
+        shell: bash -l {0}
+        run: |
+          python -m delvewheel repair --wheel-dir=wheelhouse dist\ocp_addons*.whl
 
       - name: Test Repaired Wheel # TODO: make/add cross-platform, also check if all deps are installed correctly by micromamba env update command
         shell: bash -l {0}
