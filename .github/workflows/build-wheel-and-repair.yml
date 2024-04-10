@@ -1,0 +1,57 @@
+name: Create Python wheel and repair
+
+on:
+  workflow_dispatch
+
+jobs:
+  build:
+    name: Build for python ${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [ 'ubuntu-22.04' ] #, 'macos-11', 'macos-14', 'windows-2019' ] # macos-14 is arm64
+        python-version: [ '3.9', '3.10', '3.11', '3.12' ]
+    steps:
+
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Setup Conda
+        uses: conda-incubator/setup-miniconda@v3
+        with:
+          python-version: ${{ matrix.python-version }} # TODO: check env.yml override of python version
+          environment-file: ocp-addons/env.yml
+          activate-environment: ocp-addons
+
+      - name: Install Linux Dependencies (x86_64)
+        if: ${{ matrix.os == 'ubuntu-22.04' }}
+        shell: bash -l {0}
+        run: |
+          sudo apt-get update
+          sudo apt-get install freetype* libfreetype6-dev libgl1-mesa-glx
+          conda install -c conda-forge gxx_linux-64=12
+          pip install auditwheel patchelf
+          conda info
+          conda list
+
+      - name: Build Wheel # TODO: make/add cross-platform for Win especially
+        shell: bash -l {0}
+        run: |
+          cd ocp-addons
+          python -m build -n
+
+      - name: Repair Linux Wheel (x86_64) # TODO: eliminate hardcoded GLIBC ver
+        if: ${{ matrix.os == 'ubuntu-22.04' }}
+        shell: bash -l {0}
+        run: |
+          auditwheel repair --plat manylinux_2_35_x86_64 dist/ocp_addons-*.whl
+
+      # TODO: add wheel test
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ocp_addons-${{ matrix.os }}-cp${{ matrix.python-version }}
+          path: wheelhouse/*.whl
+      
