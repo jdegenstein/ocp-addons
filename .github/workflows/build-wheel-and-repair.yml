@@ -51,7 +51,7 @@ jobs:
         shell: bash -l {0}
         run: |
           micromamba deactivate
-          micromamba create --name ocpaddonstest python=3.11 --file env.yml --yes
+          micromamba create --name ocpaddonstest python=${{ matrix.python-version }} --file env.yml --yes
           micromamba activate ocpaddonstest
           micromamba info --envs
           ls wheelhouse/*
