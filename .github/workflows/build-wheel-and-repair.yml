@@ -11,10 +11,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        #os: [ 'ubuntu-22.04', 'macos-11', 'macos-14', 'windows-2019' ] # macos-14 is arm64
-        os: [ 'windows-2019' ] 
-        #python-version: [ '3.9', '3.10', '3.11', '3.12' ]
-        python-version: [ '3.11' ]
+        os: [ 'ubuntu-22.04', 'macos-11', 'macos-14', 'windows-2019' ] # macos-14 is arm64
+        python-version: [ '3.9', '3.10', '3.11', '3.12' ]
     steps:
 
       - name: Checkout project
@@ -55,7 +53,7 @@ jobs:
           micromamba info
           micromamba list
 
-      - name: Build Wheel # TODO: make/add cross-platform for Win especially
+      - name: Build Wheel 
         shell: bash -l {0}
         run: |
           python -m build -n
@@ -72,13 +70,13 @@ jobs:
         run: |
           DYLD_LIBRARY_PATH=$CONDA_PREFIX/lib python -m delocate.cmd.delocate_wheel --wheel-dir=wheelhouse dist/ocp_addons*.whl
 
-      - name: Repair Windows Wheel (x86_64) # TODO: eliminate hardcoded GLIBC ver
+      - name: Repair Windows Wheel (x86_64) 
         if: ${{ matrix.os == 'windows-2019' }}
         shell: bash -l {0}
         run: |
           python -m delvewheel repair --wheel-dir=wheelhouse dist/ocp_addons*.whl
 
-      - name: Test Repaired Wheel # TODO: make/add cross-platform, also check if all deps are installed correctly by micromamba env update command
+      - name: Test Repaired Wheel
         shell: bash -l {0}
         run: |
           micromamba deactivate
