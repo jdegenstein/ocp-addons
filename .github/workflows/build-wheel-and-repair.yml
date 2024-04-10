@@ -20,9 +20,10 @@ jobs:
       - name: Setup Micromamba
         uses: mamba-org/setup-micromamba@v1
         with:
-          python-version: ${{ matrix.python-version }} # TODO: check env.yml override of python version
           environment-file: env.yml # located in same dir, by default
-          activate-environment: ocp-addons
+          environment-name: ocp-addons # required by micromamba
+          create-args: >-
+            python=${{ matrix.python-version }}
 
       - name: Install Linux Dependencies (x86_64)
         if: ${{ matrix.os == 'ubuntu-22.04' }}
