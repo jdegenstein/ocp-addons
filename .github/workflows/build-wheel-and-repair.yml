@@ -17,12 +17,6 @@ jobs:
       - name: Checkout project
         uses: actions/checkout@v4
 
-      # - name: Get Path information # TODO: Delete this
-      #   shell: bash -l {0}
-      #   run: |
-      #     pwd
-      #     ls -lR
-
       - name: Setup Conda
         uses: conda-incubator/setup-miniconda@v3
         with:
@@ -52,16 +46,17 @@ jobs:
         run: |
           auditwheel repair --plat manylinux_2_35_x86_64 dist/ocp_addons-*.whl
 
-      - name: Test Repaired Wheel # TODO: make/add cross-platform
+      - name: Test Repaired Wheel # TODO: make/add cross-platform, also check if all deps are installed correctly by conda env update command
         shell: bash -l {0}
         run: |
-          conda info --envs
           conda deactivate
           conda create --yes -n ocpaddonstest python=${{ matrix.python-version }} 
           conda activate ocpaddonstest
+          conda info --envs
           conda env update --file env.yml --prune
           ls wheelhouse/*
           pip install wheelhouse/ocp_addons*.whl
+          conda list
           python -c "import ocp_addons;print('ocp_addons imported successfully')"
 
       - name: Upload Artifact
