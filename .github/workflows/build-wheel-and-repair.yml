@@ -17,8 +17,8 @@ jobs:
       - name: Checkout project
         uses: actions/checkout@v4
 
-      - name: Setup Conda
-        uses: conda-incubator/setup-miniconda@v3
+      - name: Setup Micromamba
+        uses: mamba-org/setup-micromamba@v1
         with:
           python-version: ${{ matrix.python-version }} # TODO: check env.yml override of python version
           environment-file: env.yml # located in same dir, by default
@@ -30,10 +30,10 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install freetype* libfreetype6-dev libgl1-mesa-glx
-          conda install -c conda-forge gxx_linux-64=12
+          micromamba install -c conda-forge gxx_linux-64=12
           pip install auditwheel patchelf
-          conda info
-          conda list
+          micromamba info
+          micromamba list
 
       - name: Build Wheel # TODO: make/add cross-platform for Win especially
         shell: bash -l {0}
@@ -46,17 +46,16 @@ jobs:
         run: |
           auditwheel repair --plat manylinux_2_35_x86_64 dist/ocp_addons-*.whl
 
-      - name: Test Repaired Wheel # TODO: make/add cross-platform, also check if all deps are installed correctly by conda env update command
+      - name: Test Repaired Wheel # TODO: make/add cross-platform, also check if all deps are installed correctly by micromamba env update command
         shell: bash -l {0}
         run: |
-          conda deactivate
-          conda create --yes -n ocpaddonstest python=${{ matrix.python-version }} 
-          conda activate ocpaddonstest
-          conda info --envs
-          conda env update --file env.yml --prune
+          micromamba deactivate
+          micromamba create --name ocpaddonstest python=3.11 --file env.yml --yes
+          micromamba activate ocpaddonstest
+          micromamba info --envs
           ls wheelhouse/*
           pip install wheelhouse/ocp_addons*.whl
-          conda list
+          micromamba list
           python -c "import ocp_addons;print('ocp_addons imported successfully')"
 
       - name: Upload Artifact
