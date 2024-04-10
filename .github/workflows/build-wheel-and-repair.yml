@@ -76,7 +76,7 @@ jobs:
         if: ${{ matrix.os == 'windows-2019' }}
         shell: bash -l {0}
         run: |
-          python -m delvewheel repair --wheel-dir=wheelhouse dist\ocp_addons*.whl
+          python -m delvewheel repair --wheel-dir=wheelhouse dist/ocp_addons*.whl
 
       - name: Test Repaired Wheel # TODO: make/add cross-platform, also check if all deps are installed correctly by micromamba env update command
         shell: bash -l {0}
