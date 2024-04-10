@@ -57,8 +57,9 @@ jobs:
         run: |
           conda info --envs
           conda deactivate
-          conda env create -n ocpaddonstest python=${{ matrix.python-version }} -f env.yml
+          conda create --yes -n ocpaddonstest python=${{ matrix.python-version }} 
           conda activate ocpaddonstest
+          conda env update --file env.yml --prune
           ls wheelhouse/*
           pip install wheelhouse/ocp_addons*.whl
           python -c "import ocp_addons;print('ocp_addons imported successfully')"
