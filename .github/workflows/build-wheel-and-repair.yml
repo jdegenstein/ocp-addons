@@ -11,11 +11,16 @@ jobs:
     strategy:
       matrix:
         os: [ 'ubuntu-22.04' ] #, 'macos-11', 'macos-14', 'windows-2019' ] # macos-14 is arm64
-        python-version: [ '3.9', '3.10', '3.11', '3.12' ]
+        python-version: [ '3.11' ] #[ '3.9', '3.10', '3.11', '3.12' ]
     steps:
 
       - name: Checkout project
         uses: actions/checkout@v4
+
+      - name: Get Path information # TODO: Delete this
+        shell: bash -l {0}
+        run: |
+          ls -lR
 
       - name: Setup Conda
         uses: conda-incubator/setup-miniconda@v3
