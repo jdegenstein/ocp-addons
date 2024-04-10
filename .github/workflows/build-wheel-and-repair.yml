@@ -55,8 +55,9 @@ jobs:
       - name: Test Repaired Wheel # TODO: make/add cross-platform
         shell: bash -l {0}
         run: |
+          conda info --envs
           conda deactivate
-          conda create --yes -n ocpaddonstest python=${{ matrix.python-version }} -f env.yml
+          conda env create -n ocpaddonstest python=${{ matrix.python-version }} -f env.yml
           conda activate ocpaddonstest
           ls wheelhouse/*
           pip install wheelhouse/ocp_addons*.whl
