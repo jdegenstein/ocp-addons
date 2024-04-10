@@ -9,8 +9,9 @@ jobs:
     runs-on: ${{ matrix.os }}
 
     strategy:
+      fail-fast: false
       matrix:
-        os: [ 'ubuntu-22.04' ] #, 'macos-11', 'macos-14', 'windows-2019' ] # macos-14 is arm64
+        os: [ 'ubuntu-22.04', 'macos-11', 'macos-14' ] #, 'windows-2019' ] # macos-14 is arm64
         python-version: [ '3.9', '3.10', '3.11', '3.12' ]
     steps:
 
@@ -36,6 +37,13 @@ jobs:
           micromamba info
           micromamba list
 
+      - name: Install MacOS Dependencies (x86_64 / arm64)
+        if: ${{ matrix.os == 'macos-11' || matrix.os == 'macos-14'}}
+        shell: bash -l {0}
+        run: |
+          brew install automake
+          pip install delocate
+
       - name: Build Wheel # TODO: make/add cross-platform for Win especially
         shell: bash -l {0}
         run: |
@@ -46,6 +54,12 @@ jobs:
         shell: bash -l {0}
         run: |
           auditwheel repair --plat manylinux_2_35_x86_64 dist/ocp_addons-*.whl
+
+      - name: Repair MacOS Wheel (x86_64 / arm64)
+        if: ${{ matrix.os == 'macos-11' || matrix.os == 'macos-14'}}
+        shell: bash -l {0}
+        run: |
+          DYLD_LIBRARY_PATH=$CONDA_PREFIX/lib python -m delocate.cmd.delocate_wheel --wheel-dir=wheelhouse dist/ocp_addons*.whl
 
       - name: Test Repaired Wheel # TODO: make/add cross-platform, also check if all deps are installed correctly by micromamba env update command
         shell: bash -l {0}
