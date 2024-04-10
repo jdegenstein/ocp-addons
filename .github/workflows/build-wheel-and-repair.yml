@@ -20,13 +20,14 @@ jobs:
       - name: Get Path information # TODO: Delete this
         shell: bash -l {0}
         run: |
+          pwd
           ls -lR
 
       - name: Setup Conda
         uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: ${{ matrix.python-version }} # TODO: check env.yml override of python version
-          environment-file: ocp-addons/env.yml
+          environment-file: env.yml # located in same dir, by default
           activate-environment: ocp-addons
 
       - name: Install Linux Dependencies (x86_64)
@@ -43,7 +44,6 @@ jobs:
       - name: Build Wheel # TODO: make/add cross-platform for Win especially
         shell: bash -l {0}
         run: |
-          cd ocp-addons
           python -m build -n
 
       - name: Repair Linux Wheel (x86_64) # TODO: eliminate hardcoded GLIBC ver
