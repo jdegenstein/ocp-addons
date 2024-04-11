@@ -11,8 +11,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ 'ubuntu-22.04', 'macos-11', 'macos-14', 'windows-2019' ] # macos-14 is arm64
-        python-version: [ '3.9', '3.10', '3.11', '3.12' ]
+        # os: [ 'ubuntu-22.04', 'macos-11', 'macos-14', 'windows-2019' ] # macos-14 is arm64
+        # python-version: [ '3.9', '3.10', '3.11', '3.12' ]
+        os: [ 'windows-2019' ] # macos-14 is arm64
+        python-version: [ '3.11' ]
     steps:
 
       - name: Checkout project
