@@ -50,7 +50,7 @@ jobs:
         if: ${{ matrix.os == 'windows-2019' }}
         shell: bash -l {0}
         run: |
-          micromamba install -c conda-forge vs2019_win-64
+          micromamba install -c conda-forge vs2015_win-64
           pip install delvewheel
           micromamba info
           micromamba list
