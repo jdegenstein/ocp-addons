@@ -11,6 +11,9 @@
 #include <BinTools_ShapeReader.hxx>
 #include <BinTools_ShapeWriter.hxx>
 
+#include <BRepBuilderAPI_MakeEdge.hxx>
+#include <TopoDS_Edge.hxx>
+
 #define STRINGIFY(x) #x
 #define MACRO_STRINGIFY(x) STRINGIFY(x)
 
@@ -47,9 +50,13 @@ std::string _test() {
     return "Ok";
 }
 
-std::string _testOCCT() {
-    TopoDS_Shape shape;
-    return "Ok";
+py::bytes _testOCCT() {
+    auto pt1 = gp_Pnt(0,0,0);
+    auto pt2 = gp_Pnt(1,2,3);
+    auto line = BRepBuilderAPI_MakeEdge(pt1,pt2).Edge();
+    std::ostringstream buf;
+    BinTools::Write(line, buf);
+    return py::bytes(std::move(buf.str()));
 }
 
 void register_serializer(pybind11::module_ &m_gbl) {
