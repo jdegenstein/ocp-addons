@@ -56,7 +56,7 @@ py::bytes _testOCCT() {
     auto line = BRepBuilderAPI_MakeEdge(pt1,pt2).Edge();
     std::ostringstream buf;
     BinTools::Write(line, buf);
-    return py::bytes(std::move(buf.str()));
+    return py::bytes(std::move(buf));
 }
 
 void register_serializer(pybind11::module_ &m_gbl) {
