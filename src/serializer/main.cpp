@@ -21,7 +21,11 @@ namespace py = pybind11;
 
 py::bytes serialize_shape(const TopoDS_Shape &shape) {
     std::ostringstream buf;
+    std::cout << "before bintools write";
     BinTools::Write(shape, buf);
+    std::cout << "after bintools write";
+    std::cout << buf.str();
+    std::cout << "after buf.str";
     return py::bytes(std::move(buf.str()));
 }
 
