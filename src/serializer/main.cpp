@@ -59,8 +59,12 @@ py::bytes _testOCCT() {
     auto pt2 = gp_Pnt(1,2,3);
     auto line = BRepBuilderAPI_MakeEdge(pt1,pt2).Edge();
     std::ostringstream buf;
-    BinTools::Write(line, buf);
-    return py::bytes(buf.str());
+    std::cout << "before bintools write";
+    BinTools::Write(shape, buf);
+    std::cout << "after bintools write";
+    std::cout << buf.str();
+    std::cout << "after buf.str";
+    return py::bytes(std::move(buf.str()));
 }
 
 py::bytes _testSTRreturn() {
