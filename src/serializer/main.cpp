@@ -69,8 +69,8 @@ py::bytes _testOCCT() {
 }
 
 void _testSTRreturn(const TopoDS_Shape &shape) {
-    
-    std::cout << BRepAdaptor_Curve(shape).GetType();
+    auto gettype = BRepAdaptor_Curve::BRepAdaptor_Curve(shape).GetType();
+    std::cout << gettype;
     // return BRepAdaptor_Curve(line).GetType();
 }
 
