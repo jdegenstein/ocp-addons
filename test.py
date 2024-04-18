@@ -119,6 +119,6 @@ if show:
     print("obj_vertices:", mesh["obj_vertices"])
     print("test serializer:", serializer._test())
     print("test serializer OCCT shape:", serializer._testOCCT())
-    print("test C++ string return:", serializer._testSTRreturn())
+    # print("test C++ string return:", serializer._testSTRreturn())
     
 print("overall:", int(1000 * (time() - tt)), "ms")
