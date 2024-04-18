@@ -65,6 +65,8 @@ py::bytes _testOCCT() {
     std::cout << "after bintools write";
     std::cout << buf.str();
     std::cout << "after buf.str";
+    auto gettype = BRepAdaptor_Curve::BRepAdaptor_Curve(line);
+    std::cout << gettype.GetType();
     return py::bytes(std::move(buf.str()));
 }
 
