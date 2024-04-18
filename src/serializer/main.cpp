@@ -68,8 +68,8 @@ py::bytes _testOCCT() {
     return py::bytes(std::move(buf.str()));
 }
 
-void _testSTRreturn(const TopoDS_Shape &shape) {
-    auto gettype = BRepAdaptor_Curve::BRepAdaptor_Curve(shape);
+void _testSTRreturn(const TopoDS_Edge &edge) {
+    auto gettype = BRepAdaptor_Curve::BRepAdaptor_Curve(edge);
     std::cout << gettype.GetType();
     // return BRepAdaptor_Curve(line).GetType();
 }
