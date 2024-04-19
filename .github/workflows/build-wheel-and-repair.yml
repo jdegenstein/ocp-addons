@@ -76,7 +76,7 @@ jobs:
         if: ${{ matrix.os == 'windows-2019' }}
         shell: bash -l {0}
         run: |
-          python -m delvewheel repair --wheel-dir=wheelhouse dist/ocp_addons*.whl
+          python -m delvewheel repair --wheel-dir=wheelhouse --no-mangle-all -vv dist/ocp_addons*.whl
 
       - name: Test Repaired Wheel and Run Package Tests
         shell: bash -l {0}
