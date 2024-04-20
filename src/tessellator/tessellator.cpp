@@ -47,6 +47,8 @@ MeshData collect_mesh_data(
     int num_edges,
     Standard_Real obj_vertices[],
     int num_obj_vertices,
+    bool compute_missing_normals,
+    bool compute_missing_edges,
     bool timeit
 ) {
     /*
@@ -87,6 +89,52 @@ MeshData collect_mesh_data(
         v_total += 3 * f.num_vertices;
         t_total += 3 * f.num_triangles;
     }
+    if (compute_missing_normals) {
+        auto start2 = get_timer();
+        
+        for (int i=0; i < 3 * num_vertices; i++) {
+            normals[i] = 0.0;
+        }
+
+        for (int i=0; i < num_triangles; i++) {
+            Standard_Real c0_0 = vertices[3 * triangles[3*i + 0] + 0];
+            Standard_Real c0_1 = vertices[3 * triangles[3*i + 0] + 1];
+            Standard_Real c0_2 = vertices[3 * triangles[3*i + 0] + 2];
+            Standard_Real c1_0 = vertices[3 * triangles[3*i + 1] + 0];
+            Standard_Real c1_1 = vertices[3 * triangles[3*i + 1] + 1];
+            Standard_Real c1_2 = vertices[3 * triangles[3*i + 1] + 2];
+            Standard_Real c2_0 = vertices[3 * triangles[3*i + 2] + 0];
+            Standard_Real c2_1 = vertices[3 * triangles[3*i + 2] + 1];
+            Standard_Real c2_2 = vertices[3 * triangles[3*i + 2] + 2];
+            // c2 - c1
+            Standard_Real v1_0 = c2_0 - c1_0;
+            Standard_Real v1_1 = c2_1 - c1_1;
+            Standard_Real v1_2 = c2_2 - c1_2;
+            // c0 - c1
+            Standard_Real v2_0 = c0_0 - c1_0;
+            Standard_Real v2_1 = c0_1 - c1_1;
+            Standard_Real v2_2 = c0_2 - c1_2;
+            // cross product of v1 and v2
+            Standard_Real n_0 = v1_1 * v2_2 - v1_2 * v2_1;
+            Standard_Real n_1 = v1_2 * v2_0 - v1_0 * v2_2;
+            Standard_Real n_2 = v1_0 * v2_1 - v1_1 * v2_0;
+            // interpolate vertex normal by blending all face normals of a vertex
+            for (int j=0; j<3; j++) {
+                normals[3 * triangles[3*i + j] + 0] += n_0;
+                normals[3 * triangles[3*i + j] + 1] += n_1;
+                normals[3 * triangles[3*i + j] + 2] += n_2;
+            }
+        }
+        // and normalize later
+        for (int i=0; i < num_vertices; i++) {
+            Standard_Real norm = sqrt(normals[3*i] * normals[3*i] + normals[3*i + 1] * normals[3*i + 1] + normals[3*i + 2] * normals[3*i + 2]);
+            normals[3*i] /= norm;
+            normals[3*i + 1] /= norm;
+            normals[3*i + 2] /= norm;
+        }
+        if(timeit) stop_timer(start2, "Interpolating normals");
+    }
+
     if(timeit) stop_timer(start, "Collect vertices and triangles");
 
     if (timeit) start = get_timer();
@@ -99,18 +147,58 @@ MeshData collect_mesh_data(
      */
     int e_total = 0;
 
-    for (int i = 0; i < num_edges; i++) {
-        auto e = edge_list[i];
-
-        for (int j = 0; j < 6 * e.num_segments; j++) {
-            segments[e_total + j] = e.segments[j];
+    if (compute_missing_edges) {
+        auto start2 = get_timer();
+        num_edges = num_triangles;
+        num_segments = 3 * num_triangles;
+        segments = new Standard_Real[18 * num_edges];
+        segments_per_edge = new Standard_Integer[num_edges];
+        
+        for (int i=0; i < num_triangles; i++) {
+            Standard_Real c0_0 = vertices[3 * triangles[3*i + 0] + 0];
+            Standard_Real c0_1 = vertices[3 * triangles[3*i + 0] + 1];
+            Standard_Real c0_2 = vertices[3 * triangles[3*i + 0] + 2];
+            Standard_Real c1_0 = vertices[3 * triangles[3*i + 1] + 0];
+            Standard_Real c1_1 = vertices[3 * triangles[3*i + 1] + 1];
+            Standard_Real c1_2 = vertices[3 * triangles[3*i + 1] + 2];
+            Standard_Real c2_0 = vertices[3 * triangles[3*i + 2] + 0];
+            Standard_Real c2_1 = vertices[3 * triangles[3*i + 2] + 1];
+            Standard_Real c2_2 = vertices[3 * triangles[3*i + 2] + 2];
+            segments[e_total + 0] = c0_0;
+            segments[e_total + 1] = c0_1;
+            segments[e_total + 2] = c0_2;
+            segments[e_total + 3] = c1_0;
+            segments[e_total + 4] = c1_1;
+            segments[e_total + 5] = c1_2;
+            segments[e_total + 6] = c1_0;
+            segments[e_total + 7] = c1_1;
+            segments[e_total + 8] = c1_2;
+            segments[e_total + 9] = c2_0;
+            segments[e_total + 10] = c2_1;
+            segments[e_total + 11] = c2_2;
+            segments[e_total + 12] = c2_0;
+            segments[e_total + 13] = c2_1;
+            segments[e_total + 14] = c2_2;
+            segments[e_total + 15] = c0_0;
+            segments[e_total + 16] = c0_1;
+            segments[e_total + 17] = c0_2;
+            e_total += 18;
+            segments_per_edge[i] = 3;
         }
-        segments_per_edge[i] = e.num_segments;
-        edge_types[i] = e.edge_type;
+        if(timeit) stop_timer(start2, "Creating all triangle edges");
+    } else {
+        for (int i = 0; i < num_edges; i++) {
+            auto e = edge_list[i];
 
-        e_total += 6 * e.num_segments;
+            for (int j = 0; j < 6 * e.num_segments; j++) {
+                segments[e_total + j] = e.segments[j];
+            }
+            segments_per_edge[i] = e.num_segments;
+            edge_types[i] = e.edge_type;
+
+            e_total += 6 * e.num_segments;
+        }
     }
-
     if(timeit) stop_timer(start, "Collect edges");
 
     if (timeit) start = get_timer();
@@ -168,6 +256,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
     }
     TopLoc_Location loc;
 
+    int has_normals = false;  // assumption: if one face has no normal, no faces has normals
     int num_faces = 0;
     FaceData* face_list = new FaceData[num_faces];
 
@@ -215,6 +304,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
                         if (debug == 2) log_xyz("vertex", point.X(), point.Y(), point.Z(), false);
 
                         if (triangulation->HasUVNodes()) {
+                            has_normals = true;
                             const gp_Pnt2d& uv = triangulation->UVNode(j+1);
                             gp_Pnt point; 
                             gp_Vec normal;
@@ -271,6 +361,8 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
         }
         if(timeit) stop_timer(start, "Computing tessellation");
     }
+
+
     /*
      * Compute edges
      */
@@ -377,6 +469,8 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
         num_edges,
         vertex_list,
         num_vertices,
+        !has_normals,  // interpolate normals
+        compute_edges ? (num_edges==0) : false,  // calculate all triangles edges
         timeit
     );
 
