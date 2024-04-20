@@ -7,8 +7,15 @@ import platform
 __version__ = "0.1.0"
 description = "Addon packages for OCP"
 
-if platform.system() == "Linux":
-    os.environ["CXX"] = "x86_64-conda-linux-gnu-g++"
+if platform.system() == "Linux":  # TODO: revisit for consistent GH actions behavior
+    raw_machine = platform.machine()
+    if raw_machine in ("AMD64", "x86_64"):
+        archprefix = "x86_64"
+    elif raw_machine in ("aarch64"):
+        archprefix = raw_machine
+    else:
+        print(f"unknown machine type: {raw_machine}")
+    os.environ["CXX"] = archprefix + "-conda-linux-gnu-g++"
 
 ext_modules = [
     Pybind11Extension(

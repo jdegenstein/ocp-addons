@@ -18,12 +18,21 @@ mamba activate ocp-addons
 
 ### OS specific configurations
 
-- Linux
+- Linux (x86_64)
 
     ```bash
     sudo apt-get update
     sudo apt-get install freetype* libfreetype6-dev libgl1-mesa-glx
     mamba install -c conda-forge gxx_linux-64=12
+    pip install auditwheel patchelf
+    ```
+
+- Linux (aarch64)
+
+    ```bash
+    sudo apt-get update
+    sudo apt-get install freetype* libfreetype6-dev libgl1-mesa-glx
+    mamba install -c conda-forge gxx_linux-aarch64=12
     pip install auditwheel patchelf
     ```
 
@@ -52,10 +61,16 @@ python -m build -n
 
 ### Relocate the libraries in the wheel
 
-- Linux
+- Linux (x86_64)
 
     ```bash
     auditwheel repair --plat manylinux_2_35_x86_64 dist/ocp_addons-*.whl
+    ```
+    
+- Linux (aarch64)
+
+    ```bash
+    auditwheel repair --plat manylinux_2_35_aarch64 dist/ocp_addons-*.whl
     ```
 
 - MacOS (Apple Silicon)

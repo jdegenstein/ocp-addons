@@ -1,0 +1,98 @@
+name: Create Python Wheel and Repair
+
+on:
+  workflow_dispatch
+
+jobs:
+  build:
+    name: Build for python ${{ matrix.python-version }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      fail-fast: false
+      matrix:
+        # os: [ 'ubuntu-22.04', 'macos-13', 'macos-14', 'windows-2019' ] # macos-14 is arm64
+        # python-version: [ '3.9', '3.10', '3.11', '3.12' ]
+        os: [ 'windows-2019' ] # macos-14 is arm64
+        python-version: [ '3.11' ]
+    steps:
+
+      - name: Checkout project
+        uses: actions/checkout@v4
+
+      - name: Setup Micromamba
+        uses: mamba-org/setup-micromamba@v1
+        with:
+          environment-file: env.yml # located in same dir, by default
+          environment-name: ocp-addons # required by micromamba
+          create-args: >-
+            python=${{ matrix.python-version }}
+
+      - name: Install Linux Dependencies (x86_64)
+        if: ${{ matrix.os == 'ubuntu-22.04' }}
+        shell: bash -l {0}
+        run: |
+          sudo apt-get update
+          sudo apt-get install freetype* libfreetype6-dev libgl1-mesa-glx
+          micromamba install -c conda-forge gxx_linux-64=12
+          pip install auditwheel patchelf
+          micromamba info
+          micromamba list
+
+      - name: Install MacOS Dependencies (x86_64 / arm64)
+        if: ${{ matrix.os == 'macos-13' || matrix.os == 'macos-14'}}
+        shell: bash -l {0}
+        run: |
+          brew install automake
+          pip install delocate
+
+      - name: Install Windows Dependencies (x86_64)
+        if: ${{ matrix.os == 'windows-2019' }}
+        shell: bash -l {0}
+        run: |
+          micromamba install vs2019_win-64 -c conda-forge
+          pip install delvewheel
+          micromamba info
+          micromamba list
+
+      - name: Build Wheel 
+        shell: bash -l {0}
+        run: |
+          python -m build -n
+
+      - name: Repair Linux Wheel (x86_64) # TODO: eliminate hardcoded GLIBC ver
+        if: ${{ matrix.os == 'ubuntu-22.04' }}
+        shell: bash -l {0}
+        run: |
+          auditwheel repair --plat manylinux_2_35_x86_64 dist/ocp_addons-*.whl
+
+      - name: Repair MacOS Wheel (x86_64 / arm64)
+        if: ${{ matrix.os == 'macos-13' || matrix.os == 'macos-14'}}
+        shell: bash -l {0}
+        run: |
+          DYLD_LIBRARY_PATH=$CONDA_PREFIX/lib python -m delocate.cmd.delocate_wheel --wheel-dir=wheelhouse dist/ocp_addons*.whl
+
+      - name: Repair Windows Wheel (x86_64) 
+        if: ${{ matrix.os == 'windows-2019' }}
+        shell: bash -l {0}
+        run: |
+          python -m delvewheel repair --wheel-dir=wheelhouse dist/ocp_addons*.whl
+
+      - name: Test Repaired Wheel and Run Package Tests
+        shell: bash -l {0}
+        run: |
+          micromamba deactivate
+          micromamba create --name ocpaddonstest python=${{ matrix.python-version }} --file env.yml --yes
+          micromamba activate ocpaddonstest
+          micromamba info --envs
+          ls wheelhouse/*
+          pip install wheelhouse/ocp_addons*.whl
+          micromamba list
+          python -c "import ocp_addons;print('ocp_addons imported successfully')"
+          python test.py
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ocp_addons-${{ matrix.os }}-cp${{ matrix.python-version }}
+          path: wheelhouse/*.whl
