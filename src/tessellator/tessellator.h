@@ -55,6 +55,3 @@ struct MeshData {
     py::array_t<int> edge_types;
     py::array_t<float> obj_vertices;
 };
-
-MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolerance, bool parallel, bool debug, bool timeit);
-

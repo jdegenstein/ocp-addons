@@ -41,6 +41,7 @@ ext_modules = [
             "TKShHealing",
             "TKernel",
         ],
+        extra_compile_args=["-O3"],
         cxx_std=17,
     ),
 ]

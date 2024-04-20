@@ -21,10 +21,6 @@ except:
 from OCP.BinTools import BinTools
 from OCP.TopoDS import TopoDS_Shape
 
-# sys.setdlopenflags(os.RTLD_GLOBAL | os.RTLD_LAZY)
-
-sys.path.append("build")
-
 from ocp_addons.tessellator import tessellate
 
 
@@ -59,7 +55,16 @@ def decompose(array, indexes, flatten=False):
 
 
 def tess(obj, deflection, angular_tolerance, parallel):
-    m = tessellate(obj, deflection, angular_tolerance, parallel, False, True)
+    m = tessellate(
+        obj,
+        deflection,
+        angular_tolerance,
+        compute_faces=False,
+        compute_edges=True,
+        parallel=parallel,
+        debug=2,
+        timeit=True,
+    )
 
     t = time()
     tr = decompose(m.triangles.reshape(-1, 3), m.triangles_per_face, True)
@@ -72,9 +77,9 @@ def tess(obj, deflection, angular_tolerance, parallel):
     return {
         "vertices": m.vertices,
         "normals": m.normals,
-        "triangles": tr,
+        "triangles": m.triangles,
         "face_types": m.face_types,
-        "edges": sg,
+        "edges": m.segments,
         "edge_types": m.edge_types,
         "obj_vertices": m.obj_vertices,
     }
@@ -104,14 +109,10 @@ mesh = tess(obj, acc, 0.3, parallel=True)
 if show:
     print("vertices:", mesh["vertices"])
     print("normals:", mesh["normals"])
-    print("triangles:")
-    for t in mesh["triangles"]:
-        print("  ", json.dumps(t.tolist()))
+    print("triangles:", mesh["triangles"])
     print("face_types:", mesh["face_types"])
     print("edge_types:", mesh["edge_types"])
-    print("edges")
-    for e in mesh["edges"]:
-        print("  ", json.dumps(e.tolist()))
+    print("edges:", mesh["edges"])
     print("obj_vertices:", mesh["obj_vertices"])
 
 print("overall:", int(1000 * (time() - tt)), "ms")

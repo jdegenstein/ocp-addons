@@ -6,7 +6,8 @@ auto get_timer() {
 
 void stop_timer(std::chrono::time_point<std::chrono::high_resolution_clock> start, std::string message) {
     auto done = get_timer();
-    std::cout << message << " " << std::chrono::duration_cast<std::chrono::milliseconds>(done - start).count() << " ms" << std::endl;
+    float d = (std::chrono::duration_cast<std::chrono::milliseconds>(done - start).count()) / 1000.0;
+    std::cout << std::printf("%7.2f",d) << " sec: | | | " << message << std::endl;
 }
 
 void log(std::string message) {
@@ -150,188 +151,197 @@ MeshData collect_mesh_data(
     return mesh_data;    
 }
 
-MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolerance, bool parallel, bool debug, bool timeit) {
-    if(timeit) std::cout << "Start tessellation" << std::endl;
-
+MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolerance, 
+                    bool compute_faces, bool compute_edges, bool parallel, int debug, bool timeit) {
     /*
      * Tessellate mesh
      */
 
-    BRepTools::Clean(shape);
+    // https://dev.opencascade.org/node/81262#comment-21130
+    // BRepTools::Clean(shape);
 
     auto start = get_timer();
-    BRepMesh_IncrementalMesh mesher (shape, deflection, Standard_False, angular_tolerance, parallel);    
-    mesher.Perform();
-    if(timeit) stop_timer(start, "Computing BRep incremental mesh");
 
+    if (compute_edges || compute_faces) {
+        BRepMesh_IncrementalMesh mesher (shape, deflection, Standard_False, angular_tolerance, parallel);    
+        if(timeit) stop_timer(start, "Computing BRep incremental mesh");
+    }
     TopLoc_Location loc;
 
-    TopTools_IndexedMapOfShape face_map = TopTools_IndexedMapOfShape();
-    TopExp::MapShapes(shape, TopAbs_FACE, face_map);
-
-    int num_faces = face_map.Extent();
-
+    int num_faces = 0;
     FaceData* face_list = new FaceData[num_faces];
 
     int total_num_vertices = 0;
     int total_num_triangles = 0;
     
-    if(timeit) start = get_timer();
+    if (compute_faces) {
+        if(timeit) start = get_timer();
+        
+        TopTools_IndexedMapOfShape face_map = TopTools_IndexedMapOfShape();
+        TopExp::MapShapes(shape, TopAbs_FACE, face_map);
 
-    try {
-        long offset = -1;
-        // long triangle_count = 0;
+        num_faces = face_map.Extent();
+        face_list = new FaceData[num_faces];
 
-        // long s = 0;
-        for (int i = 0; i < num_faces; i++) {
-            if (debug) std::cout << "face " << i << std::endl;
+        try {
+            long offset = -1;
+            // long triangle_count = 0;
 
-            const TopoDS_Face& topods_face = TopoDS::Face(face_map.FindKey(i+1));
+            // long s = 0;
+            for (int i = 0; i < num_faces; i++) {
+                if (debug == 2) std::cout << "face " << i << std::endl;
 
-            TopAbs_Orientation orient = topods_face.Orientation();
-            Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation(topods_face, loc);
+                const TopoDS_Face& topods_face = TopoDS::Face(face_map.FindKey(i+1));
 
-            if (! triangulation.IsNull()) {
-                const Standard_Integer num_nodes = triangulation->NbNodes();
-                const Standard_Integer num_triangles = triangulation->NbTriangles();
-                
-                face_list[i].vertices = new Standard_Real[num_nodes * 3];
-                face_list[i].normals = new Standard_Real[num_nodes * 3];
-                face_list[i].triangles = new Standard_Integer[num_triangles * 3];
+                TopAbs_Orientation orient = topods_face.Orientation();
+                Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation(topods_face, loc);
 
-                BRepGProp_Face prop(topods_face);
-
-                for (Standard_Integer j = 0; j < num_nodes; j++) {
-                    gp_Pnt point = triangulation->Node(j+1).Transformed(loc).XYZ();
-                    face_list[i].vertices[3 * j    ] = point.X();
-                    face_list[i].vertices[3 * j + 1] = point.Y();
-                    face_list[i].vertices[3 * j + 2] = point.Z();
+                if (! triangulation.IsNull()) {
+                    const Standard_Integer num_nodes = triangulation->NbNodes();
+                    const Standard_Integer num_triangles = triangulation->NbTriangles();
                     
-                    if (debug) log_xyz("vertex", point.X(), point.Y(), point.Z(), false);
+                    face_list[i].vertices = new Standard_Real[num_nodes * 3];
+                    face_list[i].normals = new Standard_Real[num_nodes * 3];
+                    face_list[i].triangles = new Standard_Integer[num_triangles * 3];
 
-                    if (triangulation->HasUVNodes()) {
-                        const gp_Pnt2d& uv = triangulation->UVNode(j+1);
-                        gp_Pnt point; 
-                        gp_Vec normal;
-                        prop.Normal(uv.X(), uv.Y(), point, normal);
-                        if (normal.SquareMagnitude() > 0.0) normal.Normalize();
-                        if (topods_face.Orientation() == TopAbs_INTERNAL) normal.Reverse();
+                    BRepGProp_Face prop(topods_face);
 
-                        face_list[i].normals[3 * j    ] = normal.X();
-                        face_list[i].normals[3 * j + 1] = normal.Y();
-                        face_list[i].normals[3 * j + 2] = normal.Z();
+                    for (Standard_Integer j = 0; j < num_nodes; j++) {
+                        gp_Pnt point = triangulation->Node(j+1).Transformed(loc).XYZ();
+                        face_list[i].vertices[3 * j    ] = point.X();
+                        face_list[i].vertices[3 * j + 1] = point.Y();
+                        face_list[i].vertices[3 * j + 2] = point.Z();
+                        
+                        if (debug == 2) log_xyz("vertex", point.X(), point.Y(), point.Z(), false);
 
-                        if (debug) log_xyz(" normal", normal.X(), normal.Y(), normal.Z());
+                        if (triangulation->HasUVNodes()) {
+                            const gp_Pnt2d& uv = triangulation->UVNode(j+1);
+                            gp_Pnt point; 
+                            gp_Vec normal;
+                            prop.Normal(uv.X(), uv.Y(), point, normal);
+                            if (normal.SquareMagnitude() > 0.0) normal.Normalize();
+                            if (topods_face.Orientation() == TopAbs_INTERNAL) normal.Reverse();
+
+                            face_list[i].normals[3 * j    ] = normal.X();
+                            face_list[i].normals[3 * j + 1] = normal.Y();
+                            face_list[i].normals[3 * j + 2] = normal.Z();
+
+                            if (debug == 2) log_xyz(" normal", normal.X(), normal.Y(), normal.Z());
+                        }
                     }
-                }
 
-                for (Standard_Integer j = 0; j < num_triangles; j++) {
-                    Standard_Integer index0, index1, index2;
-                    triangulation->Triangle(j+1).Get(index0, index1, index2);
+                    for (Standard_Integer j = 0; j < num_triangles; j++) {
+                        Standard_Integer index0, index1, index2;
+                        triangulation->Triangle(j+1).Get(index0, index1, index2);
+                        
+                        face_list[i].triangles[3 * j    ] = offset + index0;
+                        face_list[i].triangles[3 * j + 1] = offset + ((orient == TopAbs_REVERSED) ? index2 : index1);
+                        face_list[i].triangles[3 * j + 2] = offset + ((orient == TopAbs_REVERSED) ? index1 : index2);
+
+                        if (debug == 2) log_xyz("triangle ", offset + index0, 
+                            offset + ((orient == TopAbs_REVERSED) ? index2 : index1),
+                            offset + ((orient == TopAbs_REVERSED) ? index1 : index2)
+                        );
+                    }
+
+                    // triangle_count += num_triangles * 3;
                     
-                    face_list[i].triangles[3 * j    ] = offset + index0;
-                    face_list[i].triangles[3 * j + 1] = offset + ((orient == TopAbs_REVERSED) ? index2 : index1);
-                    face_list[i].triangles[3 * j + 2] = offset + ((orient == TopAbs_REVERSED) ? index1 : index2);
+                    face_list[i].num_vertices = num_nodes;
+                    face_list[i].num_triangles = num_triangles;
+                    face_list[i].face_type = get_face_type(topods_face);
 
-                    if (debug) log_xyz("triangle ", offset + index0, 
-                        offset + ((orient == TopAbs_REVERSED) ? index2 : index1),
-                        offset + ((orient == TopAbs_REVERSED) ? index1 : index2)
-                    );
+
+                    offset += num_nodes;     
+                    total_num_vertices += num_nodes;
+                    total_num_triangles += num_triangles;
+                } else {
+                    if (debug == 1) std::cerr << "=> warning: Triangulation is null for face " << i << std::endl;
+                    face_list[i].vertices = nullptr;
+                    face_list[i].normals = nullptr;
+                    face_list[i].triangles = nullptr;
+                    face_list[i].num_vertices = 0;
+                    face_list[i].num_triangles = 0;
+                    face_list[i].face_type = -1;
                 }
-
-                // triangle_count += num_triangles * 3;
-                
-                face_list[i].num_vertices = num_nodes;
-                face_list[i].num_triangles = num_triangles;
-                face_list[i].face_type = get_face_type(topods_face);
-
-
-                offset += num_nodes;     
-                total_num_vertices += num_nodes;
-                total_num_triangles += num_triangles;
-            } else {
-                std::cerr << "=> warning: Triangulation is null for face " << i << std::endl;
-                face_list[i].vertices = nullptr;
-                face_list[i].normals = nullptr;
-                face_list[i].triangles = nullptr;
-                face_list[i].num_vertices = 0;
-                face_list[i].num_triangles = 0;
-                face_list[i].face_type = -1;
             }
+        } catch (Standard_Failure& e) {
+            std::cerr << "=> Standard_Failure: " << e.GetMessageString() << std::endl;
+        } catch (...) {
+            std::cerr << "=> Unknown exception caught" << std::endl;
         }
-    } catch (Standard_Failure& e) {
-        std::cerr << "=> Standard_Failure: " << e.GetMessageString() << std::endl;
-    } catch (...) {
-        std::cerr << "=> Unknown exception caught" << std::endl;
+        if(timeit) stop_timer(start, "Computing tessellation");
     }
-    if(timeit) stop_timer(start, "Computing tessellation");
-
     /*
      * Compute edges
      */
 
-    if(timeit) start = get_timer();
-
-    TopTools_IndexedMapOfShape edge_map = TopTools_IndexedMapOfShape();
-    TopTools_IndexedDataMapOfShapeListOfShape ancestor_map = TopTools_IndexedDataMapOfShapeListOfShape();
-
-    TopExp::MapShapes(shape, TopAbs_EDGE, edge_map);
-    TopExp::MapShapesAndAncestors(shape, TopAbs_EDGE, TopAbs_FACE, ancestor_map);
-
-    int num_edges = edge_map.Extent();
+    
+    int num_edges = 0;
 
     int total_num_segments = 0;
-
     EdgeData* edge_list = new EdgeData[num_edges];
+    
+    if (compute_edges) {
+        if(timeit) start = get_timer();
 
-    // int edges_offset = 0;
-    for (int i=0; i<num_edges; i++) {
-        const TopTools_ListOfShape& face_list = ancestor_map.FindFromIndex(i+1);
+        TopTools_IndexedMapOfShape edge_map = TopTools_IndexedMapOfShape();
+        TopTools_IndexedDataMapOfShapeListOfShape ancestor_map = TopTools_IndexedDataMapOfShapeListOfShape();
 
-        if (face_list.Extent() > 0){
+        TopExp::MapShapes(shape, TopAbs_EDGE, edge_map);
+        TopExp::MapShapesAndAncestors(shape, TopAbs_EDGE, TopAbs_FACE, ancestor_map);
+        
+        num_edges = edge_map.Extent();
+        edge_list = new EdgeData[num_edges];
+        
+        // int edges_offset = 0;
+        for (int i=0; i<num_edges; i++) {
+            const TopTools_ListOfShape& face_list = ancestor_map.FindFromIndex(i+1);
 
-            const TopoDS_Face& topods_face = TopoDS::Face(face_list.First());
-            const TopoDS_Edge& topods_edge = TopoDS::Edge(edge_map(i+1));
+            if (face_list.Extent() > 0){
 
-            TopLoc_Location loc = TopLoc_Location();
+                const TopoDS_Face& topods_face = TopoDS::Face(face_list.First());
+                const TopoDS_Edge& topods_edge = TopoDS::Edge(edge_map(i+1));
 
-            Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation(topods_face, loc);
-            Handle(Poly_PolygonOnTriangulation) poly = BRep_Tool::PolygonOnTriangulation(topods_edge, triangulation, loc);
+                TopLoc_Location loc = TopLoc_Location();
 
-            if (!poly.IsNull()){
-                int num_nodes = poly->NbNodes();
-                
-                edge_list[i].segments = new Standard_Real[6 * (num_nodes - 1)];
+                Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation(topods_face, loc);
+                Handle(Poly_PolygonOnTriangulation) poly = BRep_Tool::PolygonOnTriangulation(topods_edge, triangulation, loc);
 
-                for (int j=0; j<num_nodes - 1; j++){
-                    gp_Pnt p1 = triangulation->Node(poly->Node(j+1)).Transformed(loc).Coord();
-                    gp_Pnt p2 = triangulation->Node(poly->Node(j+2)).Transformed(loc).Coord();
-                    edge_list[i].segments[j * 6  + 0] = p1.X();
-                    edge_list[i].segments[j * 6  + 1] = p1.Y();
-                    edge_list[i].segments[j * 6  + 2] = p1.Z();
-                    edge_list[i].segments[j * 6  + 3] = p2.X();
-                    edge_list[i].segments[j * 6  + 4] = p2.Y();
-                    edge_list[i].segments[j * 6  + 5] = p2.Z();
+                if (!poly.IsNull()){
+                    int num_nodes = poly->NbNodes();
+                    
+                    edge_list[i].segments = new Standard_Real[6 * (num_nodes - 1)];
+
+                    for (int j=0; j<num_nodes - 1; j++){
+                        gp_Pnt p1 = triangulation->Node(poly->Node(j+1)).Transformed(loc).Coord();
+                        gp_Pnt p2 = triangulation->Node(poly->Node(j+2)).Transformed(loc).Coord();
+                        edge_list[i].segments[j * 6  + 0] = p1.X();
+                        edge_list[i].segments[j * 6  + 1] = p1.Y();
+                        edge_list[i].segments[j * 6  + 2] = p1.Z();
+                        edge_list[i].segments[j * 6  + 3] = p2.X();
+                        edge_list[i].segments[j * 6  + 4] = p2.Y();
+                        edge_list[i].segments[j * 6  + 5] = p2.Z();
+                    }
+
+                    total_num_segments += (num_nodes - 1);
+                    edge_list[i].num_segments = num_nodes - 1;
+                    edge_list[i].edge_type = get_edge_type(topods_edge);
+
+                } else {
+                    if (debug == 1) std::cerr << "=> warning: no face polygon for egde " << i << std::endl;
+                    edge_list[i].segments = nullptr;
+                    edge_list[i].num_segments = 0;
+                    edge_list[i].edge_type = -1;
                 }
-
-                total_num_segments += (num_nodes - 1);
-                edge_list[i].num_segments = num_nodes - 1;
-                edge_list[i].edge_type = get_edge_type(topods_edge);
-
             } else {
-                std::cerr << "=> warning: no face polygon for egde " << i << std::endl;
+                if (debug == 1) std::cerr << "=> warning: no face ancestors for egde " << i << std::endl;
                 edge_list[i].segments = nullptr;
                 edge_list[i].num_segments = 0;
                 edge_list[i].edge_type = -1;
             }
-        } else {
-            std::cerr << "=> warning: no face ancestors for egde " << i << std::endl;
-            edge_list[i].segments = nullptr;
-            edge_list[i].num_segments = 0;
-            edge_list[i].edge_type = -1;
         }
+        if(timeit) stop_timer(start, "Computing edges");
     }
-    if(timeit) stop_timer(start, "Computing edges");
 
     /*
      * Collect vertices
@@ -410,10 +420,22 @@ void register_tessellator(pybind11::module_ &m_gbl) {
         .. autosummary::
            :toctree: _generate
     )pbdoc";
-
-    m.def("tessellate", &tessellate, R"pbdoc(
+    
+    m.def(
+        "tessellate", 
+        &tessellate,
+        py::arg("shape"),
+        py::arg("deflection"),
+        py::arg("angular_tolerance") = 0.3,
+        py::arg("compute_faces") = true,
+        py::arg("compute_edges") = true,
+        py::arg("parallel") = true,
+        py::arg("debug") = 0,
+        py::arg("timeit") = false,
+        R"pbdoc(
         Tessellate a shape
 
         Tessellate OCP object with a native function via pybind11 and arrow
-    )pbdoc");
+        )pbdoc"
+    );
 }
