@@ -50,6 +50,7 @@ ext_modules = [
         ],
         extra_compile_args=["-O3"],
         cxx_std=17,
+        extra_compile_args = ["-O3"],
     ),
 ]
 
