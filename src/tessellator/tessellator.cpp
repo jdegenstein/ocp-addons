@@ -6,18 +6,21 @@ auto get_timer() {
 
 void stop_timer(std::chrono::time_point<std::chrono::high_resolution_clock> start, std::string message) {
     auto done = get_timer();
-    float d = (std::chrono::duration_cast<std::chrono::milliseconds>(done - start).count()) / 1000.0;
-    std::cout << std::printf("%7.2f",d) << " sec: | | | " << message << std::endl;
+    float d = (std::chrono::duration_cast<std::chrono::milliseconds>(done - start).count()) / 1000.0;    
+    std::stringstream stream;
+    stream << std::fixed << std::setprecision(3) << std::setw(8) << d;
+    std::string s = stream.str();
+    py::print(s, "sec: | | |", message);
 }
 
 void log(std::string message) {
-    std::cout << message << std::endl;
+    py::print(message);
 }
 
 template<typename T>
 void log_xyz(std::string msg, T x, T y, T z, bool endline=true) {
-    std::cout << msg << ": (" << x << ", " << y << ", " << z << ")" ;
-    if (endline) std::cout << std::endl;
+    py::print(msg, ":", "(", x, ",", y, ",", z, ")");
+    if (endline) py::print();
 }
 
 template<typename T>
@@ -274,11 +277,9 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
 
         try {
             long offset = -1;
-            // long triangle_count = 0;
 
-            // long s = 0;
             for (int i = 0; i < num_faces; i++) {
-                if (debug == 2) std::cout << "face " << i << std::endl;
+                if (debug == 2) py::print("face", i);
 
                 const TopoDS_Face& topods_face = TopoDS::Face(face_map.FindKey(i+1));
 
