@@ -81,7 +81,7 @@ def tess(obj, deflection, angular_tolerance, parallel):
     }
 
 
-test_case = 2
+test_case = 1
 
 if test_case == 0:
     # file, acc, show = "examples/b123.brep", 0.002, True
@@ -102,6 +102,7 @@ elif test_case == 2:
         box2 = bd.import_stl("box.stl")
         obj, acc, show = box2.wrapped, 0.002, True
     elif CQ:
+        print('build123d is not installed')
         exit(1)
 
 
