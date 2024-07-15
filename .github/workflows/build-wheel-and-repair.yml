@@ -1,4 +1,4 @@
-name: Create Python Wheel and Repair
+name: Create ocp-addons Python Wheel and Repair
 
 on:
   workflow_dispatch
@@ -50,13 +50,23 @@ jobs:
         if: ${{ matrix.os == 'windows-2019' }}
         shell: bash -l {0}
         run: |
-          micromamba install vs2019_win-64 -c conda-forge
           pip install delvewheel
           micromamba info
           micromamba list
 
-      - name: Build Wheel 
+      - name: Setup Windows build environment (MSVC)
+        if: ${{ runner.os == 'Windows' }}
+        uses: ilammy/msvc-dev-cmd@v1
+
+      - name: Build Wheel (non Windows)
+        if: ${{ matrix.os != 'windows-2019' }}
         shell: bash -l {0}
+        run: |
+          python -m build -n
+
+      - name: Build Wheel (Windows)
+        if: ${{ matrix.os == 'windows-2019' }}
+        shell: cmd
         run: |
           python -m build -n
 
