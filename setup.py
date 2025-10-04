@@ -22,8 +22,8 @@ occ_libs = [
 
 here = Path(__file__).resolve().parent
 
-occt_sdk = os.environ.get("OCCT_SDK", str(here / "occt"))
-print(f"OCCT SDK: {occt_sdk}")
+occt_sdk = Path(os.environ.get("OCCT_SDK", here / "occt"))
+print(f"OCCT SDK: {str(occt_sdk)}")
 
 include_dirs = [str(occt_sdk / "include/opencascade")]
 library_dirs = [str(occt_sdk / "lib")]
