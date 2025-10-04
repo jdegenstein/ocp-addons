@@ -1,21 +1,59 @@
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 from setuptools import setup
-import os, sys
-import os.path
+import os
+from pathlib import Path
 import platform
 
 __version__ = "0.1.0"
 description = "Addon packages for OCP"
 
-if platform.system() == "Linux":  # TODO: revisit for consistent GH actions behavior
-    raw_machine = platform.machine()
-    if raw_machine in ("AMD64", "x86_64"):
-        archprefix = "x86_64"
-    elif raw_machine in ("aarch64"):
-        archprefix = raw_machine
-    else:
-        print(f"unknown machine type: {raw_machine}")
-    os.environ["CXX"] = archprefix + "-conda-linux-gnu-g++"
+occ_libs = [
+    "TKG3d",
+    "TKTopAlgo",
+    "TKMesh",
+    "TKBRep",
+    "TKGeomAlgo",
+    "TKGeomBase",
+    "TKG2d",
+    "TKMath",
+    "TKShHealing",
+    "TKernel",
+]
+
+here = Path(__file__).resolve().parent
+
+occt_sdk = os.environ("OCCT_SDK", str(here / "occt"))
+
+include_dirs = [str(occt_sdk / "include/opencascade")]
+library_dirs = [str(occt_sdk / "lib")]
+
+extra_compile_args = ["-O3"]
+extra_link_args = []
+
+if platform.system() == "Linux":
+    os.environ["CC"] = "/usr/bin/gcc"
+    os.environ["CXX"] = "/usr/bin/g++"
+
+elif platform.system() == "Darwin":
+    os.environ["CC"] = "clang"
+    os.environ["CXX"] = "clang++"
+
+    extra_compile_args.extend([
+        "-mmacosx-version-min=11.1",
+    ])
+    extra_link_args.extend(
+        [
+            "-Wl,-headerpad_max_install_names",
+            "-mmacosx-version-min=11.1",
+        ],
+    )
+
+elif platform.system() == "Windows":
+    pass
+
+else:
+    raise RuntimeError(f"Platform {platform.system()} is not supported")
+
 
 ext_modules = [
     Pybind11Extension(
@@ -29,29 +67,15 @@ ext_modules = [
             ("VERSION_INFO", __version__),
             ("DESCRIPTION", description),
         ],
-        include_dirs=[
-            os.path.join(sys.prefix, "include", "opencascade"),
-            os.path.join(sys.prefix, "Library", "include", "opencascade"),
-        ],
-        library_dirs=[
-            os.path.join(sys.prefix, "Library", "lib"),
-        ],
-        libraries=[
-            "TKG3d",
-            "TKTopAlgo",
-            "TKMesh",
-            "TKBRep",
-            "TKGeomAlgo",
-            "TKGeomBase",
-            "TKG2d",
-            "TKMath",
-            "TKShHealing",
-            "TKernel",
-        ],
-        extra_compile_args=["-O3"],
+        include_dirs=include_dirs,
+        library_dirs=library_dirs,
+        libraries=occ_libs,
+        extra_compile_args=extra_compile_args,
+        extra_link_args=extra_link_args,
         cxx_std=17,
     ),
 ]
+
 
 setup(
     name="ocp_addons",
@@ -65,5 +89,5 @@ setup(
     extras_require={"test": "pytest"},
     cmdclass={"build_ext": build_ext},
     zip_safe=False,
-    python_requires=">=3.9",
+    python_requires=">=3.11",
 )
