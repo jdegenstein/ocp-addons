@@ -57,10 +57,12 @@ elif platform.system() == "Windows":
 else:
     raise RuntimeError(f"Platform {platform.system()} is not supported")
 
-print("setup.py: include_dirs", include_dirs)
-print("setup.py: library_dirs", library_dirs)
-print("setup.py: extra_compile_args", extra_compile_args)
-print("setup.py: extra_link_args", extra_link_args)
+# Do not print outside ensure "python setup.py --version" works correctly
+if os.environ.get("DEBUG_SETUP_PY") is not None:
+    print("setup.py: include_dirs", include_dirs)
+    print("setup.py: library_dirs", library_dirs)
+    print("setup.py: extra_compile_args", extra_compile_args)
+    print("setup.py: extra_link_args", extra_link_args)
 
 ext_modules = [
     Pybind11Extension(
