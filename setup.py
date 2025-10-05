@@ -25,14 +25,13 @@ here = Path(__file__).resolve().parent
 
 occt_sdk = Path(os.environ.get("OCCT_SDK", here / "occt"))
 
-extra_compile_args = ["-O3"]
+extra_compile_args = []
 extra_link_args = []
-
-print("setup.py: platform.system", platform.system())
 
 if platform.system() == "Linux":
     include_dirs = [str(occt_sdk / "include/opencascade")]
     library_dirs = [str(occt_sdk / "lib")]
+    extra_compile_args.extend(["-O3"])
 
 elif platform.system() == "Darwin":
     include_dirs = [str(occt_sdk / "include/opencascade")]
@@ -40,6 +39,7 @@ elif platform.system() == "Darwin":
 
     extra_compile_args.extend(
         [
+            "-O3",
             "-mmacosx-version-min=11.1",
         ]
     )
@@ -59,6 +59,8 @@ else:
 
 print("setup.py: include_dirs", include_dirs)
 print("setup.py: library_dirs", library_dirs)
+print("setup.py: extra_compile_args", extra_compile_args)
+print("setup.py: extra_link_args", extra_link_args)
 
 ext_modules = [
     Pybind11Extension(
