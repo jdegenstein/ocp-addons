@@ -23,7 +23,7 @@ occ_libs = [
 
 here = Path(__file__).resolve().parent
 
-occt_sdk = os.environ.get("OCCT_SDK", str(here / "occt"))
+occt_sdk = Path(os.environ.get("OCCT_SDK", here / "occt"))
 
 extra_compile_args = ["-O3"]
 extra_link_args = []
