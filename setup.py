@@ -5,7 +5,7 @@ from pathlib import Path
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 from setuptools import setup
 
-__version__ = "0.1.1"
+__version__ = "0.1.2"
 description = "Addon packages for OCP"
 
 occ_libs = [
