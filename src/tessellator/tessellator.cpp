@@ -461,7 +461,10 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
         compute_edges ? (num_edges==0) : false,  // calculate all triangles edges
         timeit
     );
-
+    std::cout << "mesh.vertices: " << result.vertices << std::endl;
+    std::cout << "mesh.triangles: " << result.triangles << std::endl;
+    py::print(result.vertices);
+    py::print(result.triangles);
     return result;
 }
 
