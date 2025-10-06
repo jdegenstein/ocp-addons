@@ -264,7 +264,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
         num_faces = face_map.Extent();
         face_list = new FaceData[num_faces];
         
-        if (debug >= 1) py::print("num_faces", num_faces, "\n")
+        if (debug >= 1) py::print("num_faces", num_faces, "\n");
 
         try {
             long offset = -1;
@@ -346,10 +346,10 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
             }
         } catch (Standard_Failure& e) {
             std::cerr << "=> Standard_Failure: " << e.GetMessageString() << std::endl;
-            py::print("Error:", e.GetMessageString(), "\n")
+            py::print("Error:", e.GetMessageString(), "\n");
         } catch (...) {
             std::cerr << "=> Unknown exception caught" << std::endl;
-            py::print("Error: unknown\n")
+            py::print("Error: unknown\n");
         }
         if(timeit) stop_timer(start, "Computing tessellation");
     }
