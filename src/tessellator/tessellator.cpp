@@ -23,13 +23,21 @@ void log_xyz(std::string msg, T x, T y, T z, bool endline=true) {
     if (endline) py::print();
 }
 
-template<typename T>
-py::array_t<T> copy_to_numpy(T *arr, int size) {
-    auto array = py::array_t<T>(size);
-    auto array_buffer = array.request();
-    T *arr_vertices_ptr = (T *) array_buffer.ptr;
-    std::memcpy(arr_vertices_ptr, arr, size * sizeof(T));
-    return array;
+// Helper to wrap a raw new[] pointer into a NumPy array with ownership transfer
+template <typename T>
+py::array_t<T> wrap_numpy(T* ptr, ssize_t n) {
+    // Capsule will call delete[] when the array is GC’d
+    py::capsule owner(ptr, [](void* p){
+        T* t = reinterpret_cast<T*>(p);
+        delete[] t;
+    });
+    // 1D array: shape [n], stride [sizeof(T)]
+    return py::array_t<T>(
+        { n },                               // shape
+        { static_cast<ssize_t>(sizeof(T)) }, // strides in bytes
+        ptr,                                 // data pointer
+        owner                                // base/owner capsule
+    );
 }
 
 GeomAbs_SurfaceType get_face_type(TopoDS_Face face){
@@ -206,39 +214,20 @@ MeshData collect_mesh_data(
 
     if (timeit) start = get_timer();
 
-    auto arr_vertices = copy_to_numpy(vertices, 3 * num_vertices);
-    auto arr_normals = copy_to_numpy(normals, 3 * num_vertices);
-    auto arr_triangles = copy_to_numpy(triangles, 3 * num_triangles);
-    auto arr_triangles_per_face = copy_to_numpy(triangles_per_face, num_faces);
-    auto arr_face_types = copy_to_numpy(face_types, num_faces);
-    auto arr_edge_types = copy_to_numpy(edge_types, num_edges);
-    auto arr_obj_vertices = copy_to_numpy(obj_vertices, 3 * num_obj_vertices);
-    auto arr_segments = copy_to_numpy(segments, 6 * num_segments);
-    auto arr_segments_per_edge = copy_to_numpy(segments_per_edge, num_edges);
+    MeshData mesh_data;
+
+    mesh_data.vertices = wrap_numpy(vertices, 3 * num_vertices);
+    mesh_data.normals = wrap_numpy(normals, 3 * num_vertices);
+    mesh_data.triangles = wrap_numpy(triangles, 3 * num_triangles);
+    mesh_data.triangles_per_face = wrap_numpy(triangles_per_face, num_faces);
+    mesh_data.face_types = wrap_numpy(face_types, num_faces);
+    mesh_data.segments = wrap_numpy(edge_types, num_edges);
+    mesh_data.segments_per_edge = wrap_numpy(obj_vertices, 3 * num_obj_vertices);
+    mesh_data.edge_types = wrap_numpy(segments, 6 * num_segments);
+    mesh_data.obj_vertices = wrap_numpy(segments_per_edge, num_edges);
 
     if(timeit) stop_timer(start, "Cast to numpy");
 
-    if(timeit) start = get_timer(); 
-    MeshData mesh_data = {
-        arr_vertices,
-        arr_normals,
-        arr_triangles,
-        arr_triangles_per_face,
-        arr_face_types,
-        arr_segments,
-        arr_segments_per_edge,
-        arr_edge_types,
-        arr_obj_vertices
-    };
-
-    delete[] vertices;
-    delete[] normals;
-    delete[] triangles;
-    delete[] triangles_per_face;
-    delete[] segments;
-    delete[] segments_per_edge;
-
-    if(timeit) stop_timer(start, "Create result class");
     return mesh_data;    
 }
 
@@ -261,7 +250,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
 
     int has_normals = false;  // assumption: if one face has no normal, no faces has normals
     int num_faces = 0;
-    FaceData* face_list = new FaceData[num_faces];
+    FaceData* face_list;
 
     int total_num_vertices = 0;
     int total_num_triangles = 0;
@@ -279,8 +268,6 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
             long offset = -1;
 
             for (int i = 0; i < num_faces; i++) {
-                if (debug == 2) py::print("face", i);
-
                 const TopoDS_Face& topods_face = TopoDS::Face(face_map.FindKey(i+1));
 
                 TopAbs_Orientation orient = topods_face.Orientation();
@@ -474,20 +461,6 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
         compute_edges ? (num_edges==0) : false,  // calculate all triangles edges
         timeit
     );
-
-    // delete face_list and edge_list
-    for (int i=0; i<num_faces; i++) {
-        delete[] face_list[i].vertices;
-        delete[] face_list[i].normals;
-        delete[] face_list[i].triangles;
-    }
-    delete[] face_list;
-
-    for (int i=0; i<num_edges; i++) {
-        delete[] edge_list[i].segments;
-    }
-    delete[] edge_list;
-    delete[] vertex_list;
 
     return result;
 }

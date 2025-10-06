@@ -30,7 +30,8 @@
 
 namespace py = pybind11;
 
-struct FaceData {
+struct FaceData
+{
     Standard_Real *vertices;
     Standard_Real *normals;
     Standard_Integer *triangles;
@@ -39,20 +40,25 @@ struct FaceData {
     Standard_Integer face_type;
 };
 
-struct EdgeData {
+struct EdgeData
+{
     Standard_Real *segments;
     Standard_Real num_segments;
     Standard_Integer edge_type;
 };
 
-struct MeshData {
-    py::array_t<float> vertices;
-    py::array_t<float> normals;
+struct MeshData
+{
+    py::array_t<double> vertices;
+    py::array_t<double> normals;
     py::array_t<int> triangles;
     py::array_t<int> triangles_per_face;
     py::array_t<int> face_types;
-    py::array_t<float> segments;
+    py::array_t<double> segments;
     py::array_t<int> segments_per_edge;
     py::array_t<int> edge_types;
-    py::array_t<float> obj_vertices;
+    py::array_t<double> obj_vertices;
 };
+
+MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolerance,
+                    bool compute_faces, bool compute_edges, bool parallel, int debug, bool timeit);
