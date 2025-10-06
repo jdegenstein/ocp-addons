@@ -6,7 +6,7 @@ auto get_timer() {
 
 void stop_timer(std::chrono::time_point<std::chrono::high_resolution_clock> start, std::string message) {
     auto done = get_timer();
-    float d = (std::chrono::duration_cast<std::chrono::milliseconds>(done - start).count()) / 1000.0;    
+    double d = (std::chrono::duration_cast<std::chrono::milliseconds>(done - start).count()) / 1000.0;    
     std::stringstream stream;
     stream << std::fixed << std::setprecision(3) << std::setw(8) << d;
     std::string s = stream.str();
@@ -25,7 +25,7 @@ void log_xyz(std::string msg, T x, T y, T z, bool endline=true) {
 
 // Helper to wrap a raw new[] pointer into a NumPy array with ownership transfer
 template <typename T>
-py::array_t<T> wrap_numpy(T* ptr, ssize_t n) {
+py::array_t<T> wrap_numpy(T* ptr, std::ptrdiff_t n) {
     // Capsule will call delete[] when the array is GC’d
     py::capsule owner(ptr, [](void* p){
         T* t = reinterpret_cast<T*>(p);
@@ -33,10 +33,10 @@ py::array_t<T> wrap_numpy(T* ptr, ssize_t n) {
     });
     // 1D array: shape [n], stride [sizeof(T)]
     return py::array_t<T>(
-        { n },                               // shape
-        { static_cast<ssize_t>(sizeof(T)) }, // strides in bytes
-        ptr,                                 // data pointer
-        owner                                // base/owner capsule
+        { n },                                      // shape
+        { static_cast<std::ptrdiff_t>(sizeof(T)) }, // strides in bytes
+        ptr,                                        // data pointer
+        owner                                       // base/owner capsule
     );
 }
 
