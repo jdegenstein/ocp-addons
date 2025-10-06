@@ -44,7 +44,7 @@ struct FaceData
 struct EdgeData
 {
     Standard_Real *segments;
-    Standard_Real num_segments;
+    Standard_Integer num_segments;
     Standard_Integer edge_type;
 };
 
