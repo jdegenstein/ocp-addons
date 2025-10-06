@@ -37,12 +37,10 @@ elif platform.system() == "Darwin":
     include_dirs = [str(occt_sdk / "include/opencascade")]
     library_dirs = [str(occt_sdk / "lib")]
 
-    extra_compile_args.extend(
-        [
-            "-O3",
-            "-mmacosx-version-min=11.1",
-        ]
-    )
+    extra_compile_args.extend([
+        "-O3",
+        "-mmacosx-version-min=11.1",
+    ])
     extra_link_args.extend(
         [
             "-Wl,-headerpad_max_install_names",
