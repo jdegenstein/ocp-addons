@@ -263,6 +263,8 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
 
         num_faces = face_map.Extent();
         face_list = new FaceData[num_faces];
+        
+        if (debug >= 1) py::print("num_faces", num_faces, "\n")
 
         try {
             long offset = -1;
@@ -289,7 +291,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
                         face_list[i].vertices[3 * j + 1] = point.Y();
                         face_list[i].vertices[3 * j + 2] = point.Z();
                         
-                        if (debug == 2) log_xyz("vertex", point.X(), point.Y(), point.Z(), false);
+                        if (debug >= 2) log_xyz("vertex", point.X(), point.Y(), point.Z(), false);
 
                         if (triangulation->HasUVNodes()) {
                             has_normals = true;
@@ -304,7 +306,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
                             face_list[i].normals[3 * j + 1] = normal.Y();
                             face_list[i].normals[3 * j + 2] = normal.Z();
 
-                            if (debug == 2) log_xyz(" normal", normal.X(), normal.Y(), normal.Z());
+                            if (debug >= 2) log_xyz(" normal", normal.X(), normal.Y(), normal.Z());
                         }
                     }
 
@@ -316,7 +318,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
                         face_list[i].triangles[3 * j + 1] = offset + ((orient == TopAbs_REVERSED) ? index2 : index1);
                         face_list[i].triangles[3 * j + 2] = offset + ((orient == TopAbs_REVERSED) ? index1 : index2);
 
-                        if (debug == 2) log_xyz("triangle ", offset + index0, 
+                        if (debug >= 2) log_xyz("triangle ", offset + index0, 
                             offset + ((orient == TopAbs_REVERSED) ? index2 : index1),
                             offset + ((orient == TopAbs_REVERSED) ? index1 : index2)
                         );
@@ -333,7 +335,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
                     total_num_vertices += num_nodes;
                     total_num_triangles += num_triangles;
                 } else {
-                    if (debug == 1) std::cerr << "=> warning: Triangulation is null for face " << i << std::endl;
+                    if (debug >= 1) py::print("=> warning: Triangulation is null for face ", i, "\n");
                     face_list[i].vertices = nullptr;
                     face_list[i].normals = nullptr;
                     face_list[i].triangles = nullptr;
@@ -344,8 +346,10 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
             }
         } catch (Standard_Failure& e) {
             std::cerr << "=> Standard_Failure: " << e.GetMessageString() << std::endl;
+            py::print("Error:", e.GetMessageString(), "\n")
         } catch (...) {
             std::cerr << "=> Unknown exception caught" << std::endl;
+            py::print("Error: unknown\n")
         }
         if(timeit) stop_timer(start, "Computing tessellation");
     }
@@ -463,8 +467,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
     );
     std::cout << "mesh.vertices: " << result.vertices << std::endl;
     std::cout << "mesh.triangles: " << result.triangles << std::endl;
-    py::print(result.vertices);
-    py::print(result.triangles);
+
     return result;
 }
 
