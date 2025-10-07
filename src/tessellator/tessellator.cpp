@@ -30,8 +30,12 @@ void log_xyz(std::string msg, T x, T y, T z, bool endline = true)
 
 // Helper to wrap a raw new[] pointer into a NumPy array with ownership transfer
 template <typename T>
-py::array_t<T> wrap_numpy(T *ptr, std::ptrdiff_t n)
+py::array_t<T> wrap_numpy(T *ptr, int n)
 {
+    if (sizeof(T) != 4)
+    {
+        py::print("ERROR: numpy arrays will be broken", sizeof(T));
+    }
     // Capsule will call delete[] when the array is GC’d
     py::capsule owner(ptr, [](void *p)
                       {
@@ -39,10 +43,10 @@ py::array_t<T> wrap_numpy(T *ptr, std::ptrdiff_t n)
         delete[] t; });
     // 1D array: shape [n], stride [sizeof(T)]
     return py::array_t<T>(
-        {n},                                      // shape
-        {static_cast<std::ptrdiff_t>(sizeof(T))}, // strides in bytes
-        ptr,                                      // data pointer
-        owner                                     // base/owner capsule
+        {n},         // shape
+        {sizeof(T)}, // int32 or float
+        ptr,         // data pointer
+        owner        // base/owner capsule
     );
 }
 
@@ -64,7 +68,7 @@ MeshData collect_mesh_data(
     EdgeData edge_list[],
     int num_segments,
     int num_edges,
-    Standard_Real obj_vertices[],
+    float obj_vertices[],
     int num_obj_vertices,
     bool compute_missing_normals,
     bool compute_missing_edges,
@@ -514,14 +518,14 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
 
     int num_vertices = vertex_map.Extent();
 
-    Standard_Real *vertex_list = new Standard_Real[3 * num_vertices];
+    float *vertex_list = new float[3 * num_vertices];
     for (int i = 0; i < num_vertices; i++)
     {
         const TopoDS_Vertex &topods_vertex = TopoDS::Vertex(vertex_map.FindKey(i + 1));
         gp_Pnt p = BRep_Tool::Pnt(topods_vertex);
-        vertex_list[3 * i + 0] = p.X();
-        vertex_list[3 * i + 1] = p.Y();
-        vertex_list[3 * i + 2] = p.Z();
+        vertex_list[3 * i + 0] = static_cast<float>(p.X());
+        vertex_list[3 * i + 1] = static_cast<float>(p.Y());
+        vertex_list[3 * i + 2] = static_cast<float>(p.Z());
     }
 
     if (timeit)
