@@ -49,17 +49,18 @@ struct EdgeData
     Standard_Integer edge_type;
 };
 
+// threejs needs 32 bit decimal numbers, hence float
 struct MeshData
 {
-    py::array_t<double> vertices;
-    py::array_t<double> normals;
+    py::array_t<float> vertices;
+    py::array_t<float> normals;
     py::array_t<int> triangles;
     py::array_t<int> triangles_per_face;
     py::array_t<int> face_types;
-    py::array_t<double> segments;
+    py::array_t<float> segments;
     py::array_t<int> segments_per_edge;
     py::array_t<int> edge_types;
-    py::array_t<double> obj_vertices;
+    py::array_t<float> obj_vertices;
 };
 
 MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolerance,
