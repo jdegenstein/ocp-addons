@@ -221,10 +221,10 @@ MeshData collect_mesh_data(
     mesh_data.triangles = wrap_numpy(triangles, 3 * num_triangles);
     mesh_data.triangles_per_face = wrap_numpy(triangles_per_face, num_faces);
     mesh_data.face_types = wrap_numpy(face_types, num_faces);
-    mesh_data.segments = wrap_numpy(edge_types, num_edges);
-    mesh_data.segments_per_edge = wrap_numpy(obj_vertices, 3 * num_obj_vertices);
-    mesh_data.edge_types = wrap_numpy(segments, 6 * num_segments);
-    mesh_data.obj_vertices = wrap_numpy(segments_per_edge, num_edges);
+    mesh_data.edge_types = wrap_numpy(edge_types, num_edges);
+    mesh_data.obj_vertices = wrap_numpy(obj_vertices, 3 * num_obj_vertices);
+    mesh_data.segments = wrap_numpy(segments, 6 * num_segments);
+    mesh_data.segments_per_edge = wrap_numpy(segments_per_edge, num_edges);
 
     if(timeit) stop_timer(start, "Cast to numpy");
 
