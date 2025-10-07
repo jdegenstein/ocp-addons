@@ -546,6 +546,19 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
         compute_edges ? (num_edges == 0) : false, // calculate all triangles edges
         timeit);
 
+    if (debug == 2)
+    {
+        py::print("vertices", result.vertices, result.vertices.dtype());
+        py::print("normals", result.normals, result.normals.dtype());
+        py::print("triangles", result.triangles, result.triangles.dtype());
+        py::print("triangles_per_face", result.triangles_per_face, result.triangles_per_face.dtype());
+        py::print("face_types", result.face_types, result.face_types.dtype());
+        py::print("segments", result.segments, result.segments.dtype());
+        py::print("segments_per_edge", result.segments_per_edge, result.segments_per_edge.dtype());
+        py::print("edge_types", result.edge_types, result.edge_types.dtype());
+        py::print("obj_vertices", result.obj_vertices, result.obj_vertices.dtype());
+    }
+
     return result;
 }
 
