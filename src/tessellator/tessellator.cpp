@@ -263,6 +263,7 @@ MeshData collect_mesh_data(
     float *obj_vertices32 = convert_to_float(obj_vertices, 3 * num_obj_vertices);
     float *segments32 = convert_to_float(segments, 6 * num_segments);
 
+    // wrap_numpy use a capsule, so Python triggers deletion
     mesh_data.vertices = wrap_numpy(vertices32, 3 * num_vertices);
     mesh_data.normals = wrap_numpy(normals32, 3 * num_vertices);
     mesh_data.triangles = wrap_numpy(triangles, 3 * num_triangles);
