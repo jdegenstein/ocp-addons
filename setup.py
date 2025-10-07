@@ -25,7 +25,7 @@ here = Path(__file__).resolve().parent
 
 occt_sdk = Path(os.environ.get("OCCT_SDK", here / "occt"))
 
-extra_compile_args = []
+extra_compile_args = ["-Wno-deprecated-declarations"]
 extra_link_args = []
 
 if platform.system() == "Linux":
