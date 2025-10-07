@@ -25,13 +25,13 @@ here = Path(__file__).resolve().parent
 
 occt_sdk = Path(os.environ.get("OCCT_SDK", here / "occt"))
 
-extra_compile_args = ["-Wno-deprecated-declarations"]
+extra_compile_args = []
 extra_link_args = []
 
 if platform.system() == "Linux":
     include_dirs = [str(occt_sdk / "include/opencascade")]
     library_dirs = [str(occt_sdk / "lib")]
-    extra_compile_args.extend(["-O3"])
+    extra_compile_args.extend(["-O3", "-Wno-deprecated-declarations"])
 
 elif platform.system() == "Darwin":
     include_dirs = [str(occt_sdk / "include/opencascade")]
@@ -39,7 +39,7 @@ elif platform.system() == "Darwin":
 
     extra_compile_args.extend([
         "-O3",
-        "-mmacosx-version-min=11.1",
+        "-Wno-deprecated-declarations-mmacosx-version-min=11.1",
     ])
     extra_link_args.extend(
         [

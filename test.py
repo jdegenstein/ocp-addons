@@ -66,7 +66,7 @@ def tess(obj, deflection, angular_tolerance, parallel):
         compute_faces=True,
         compute_edges=True,
         parallel=parallel,
-        debug=0,
+        debug=2,
         timeit=True,
     )
 
