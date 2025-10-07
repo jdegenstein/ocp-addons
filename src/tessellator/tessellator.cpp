@@ -243,7 +243,14 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
     auto start = get_timer();
 
     if (compute_edges || compute_faces) {
+        if (debug >= 1) {
+            py::print("deflection", deflection, "angular_tolerance", angular_tolerance, "parallel", parallel, "\n");
+        }
         BRepMesh_IncrementalMesh mesher (shape, deflection, Standard_False, angular_tolerance, parallel);    
+        if (debug >= 1) {
+            py::print("IsDone", mesher.IsDone(), "\n");
+            py::print("GetStatusFlags", mesher.GetStatusFlags(), "\n");
+        }
         if(timeit) stop_timer(start, "Computing BRep incremental mesh");
     }
     TopLoc_Location loc;
