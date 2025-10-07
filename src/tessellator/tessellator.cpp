@@ -357,10 +357,8 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
                 }
             }
         } catch (Standard_Failure& e) {
-            std::cerr << "=> Standard_Failure: " << e.GetMessageString() << std::endl;
             py::print("Error:", e.GetMessageString(), "\n");
         } catch (...) {
-            std::cerr << "=> Unknown exception caught" << std::endl;
             py::print("Error: unknown\n");
         }
         if(timeit) stop_timer(start, "Computing tessellation");
@@ -424,13 +422,13 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
                     edge_list[i].edge_type = get_edge_type(topods_edge);
 
                 } else {
-                    if (debug == 1) std::cerr << "=> warning: no face polygon for egde " << i << std::endl;
+                    if (debug == 1) py::print("=> warning: no face polygon for egde ", i);
                     edge_list[i].segments = nullptr;
                     edge_list[i].num_segments = 0;
                     edge_list[i].edge_type = -1;
                 }
             } else {
-                if (debug == 1) std::cerr << "=> warning: no face ancestors for egde " << i << std::endl;
+                if (debug == 1) py::print("=> warning: no face ancestors for egde ", i);
                 edge_list[i].segments = nullptr;
                 edge_list[i].num_segments = 0;
                 edge_list[i].edge_type = -1;
@@ -477,8 +475,6 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
         compute_edges ? (num_edges==0) : false,  // calculate all triangles edges
         timeit
     );
-    std::cout << "mesh.vertices: " << result.vertices << std::endl;
-    std::cout << "mesh.triangles: " << result.triangles << std::endl;
 
     return result;
 }
