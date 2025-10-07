@@ -246,6 +246,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
         if (debug >= 1) {
             py::print("deflection", deflection, "angular_tolerance", angular_tolerance, "parallel", parallel, "\n");
         }
+        BRepTools::Clean(shape);
         BRepMesh_IncrementalMesh mesher (shape, deflection, Standard_False, angular_tolerance, parallel);    
         if (debug >= 1) {
             py::print("IsDone", mesher.IsDone(), "\n");
@@ -278,6 +279,10 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
 
             for (int i = 0; i < num_faces; i++) {
                 const TopoDS_Face& topods_face = TopoDS::Face(face_map.FindKey(i+1));
+                
+                BRepCheck_Analyzer checker(topods_face);
+                bool valid = checker.IsValid();
+                if (debug >= 2) py::print("face", i, "is", valid);
 
                 TopAbs_Orientation orient = topods_face.Orientation();
                 Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation(topods_face, loc);

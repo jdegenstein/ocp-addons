@@ -28,6 +28,7 @@
 #include <TopTools_IndexedMapOfShape.hxx>
 #include <BRepAdaptor_Surface.hxx>
 #include <BRepAdaptor_Curve.hxx>
+#include <BRepCheck_Analyzer.hxx>
 
 namespace py = pybind11;
 
