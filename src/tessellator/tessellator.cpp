@@ -243,12 +243,12 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
     auto start = get_timer();
 
     if (compute_edges || compute_faces) {
-        if (debug >= 1) {
+        if (debug == 1 || debug == 2) {
             py::print("deflection", deflection, "angular_tolerance", angular_tolerance, "parallel", parallel, "\n");
         }
         BRepTools::Clean(shape);
         BRepMesh_IncrementalMesh mesher (shape, deflection, Standard_False, angular_tolerance, parallel);    
-        if (debug >= 1) {
+        if (debug == 1 || debug == 2) {
             py::print("IsDone", mesher.IsDone(), "\n");
             py::print("GetStatusFlags", mesher.GetStatusFlags(), "\n");
         }
@@ -272,7 +272,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
         num_faces = face_map.Extent();
         face_list = new FaceData[num_faces];
         
-        if (debug >= 1) py::print("num_faces", num_faces, "\n");
+        if (debug == 1 || debug == 2) py::print("num_faces", num_faces, "\n");
 
         try {
             long offset = -1;
@@ -282,7 +282,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
                 
                 BRepCheck_Analyzer checker(topods_face);
                 bool valid = checker.IsValid();
-                if (debug >= 2) py::print("face", i, "is", valid);
+                if (debug == 2) py::print("face", i, "is", valid);
 
                 TopAbs_Orientation orient = topods_face.Orientation();
                 Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation(topods_face, loc);
@@ -303,7 +303,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
                         face_list[i].vertices[3 * j + 1] = point.Y();
                         face_list[i].vertices[3 * j + 2] = point.Z();
                         
-                        if (debug >= 2) log_xyz("vertex", point.X(), point.Y(), point.Z(), false);
+                        if (debug == 2) log_xyz("vertex", point.X(), point.Y(), point.Z(), false);
 
                         if (triangulation->HasUVNodes()) {
                             has_normals = true;
@@ -318,7 +318,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
                             face_list[i].normals[3 * j + 1] = normal.Y();
                             face_list[i].normals[3 * j + 2] = normal.Z();
 
-                            if (debug >= 2) log_xyz(" normal", normal.X(), normal.Y(), normal.Z());
+                            if (debug == 2) log_xyz(" normal", normal.X(), normal.Y(), normal.Z());
                         }
                     }
 
@@ -330,7 +330,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
                         face_list[i].triangles[3 * j + 1] = offset + ((orient == TopAbs_REVERSED) ? index2 : index1);
                         face_list[i].triangles[3 * j + 2] = offset + ((orient == TopAbs_REVERSED) ? index1 : index2);
 
-                        if (debug >= 2) log_xyz("triangle ", offset + index0, 
+                        if (debug == 2) log_xyz("triangle ", offset + index0, 
                             offset + ((orient == TopAbs_REVERSED) ? index2 : index1),
                             offset + ((orient == TopAbs_REVERSED) ? index1 : index2)
                         );
@@ -347,7 +347,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
                     total_num_vertices += num_nodes;
                     total_num_triangles += num_triangles;
                 } else {
-                    if (debug >= 1) py::print("=> warning: Triangulation is null for face ", i, "\n");
+                    if (debug == 1 || debug == 2) py::print("=> warning: Triangulation is null for face ", i, "\n");
                     face_list[i].vertices = nullptr;
                     face_list[i].normals = nullptr;
                     face_list[i].triangles = nullptr;
@@ -422,13 +422,13 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
                     edge_list[i].edge_type = get_edge_type(topods_edge);
 
                 } else {
-                    if (debug == 1) py::print("=> warning: no face polygon for egde ", i);
+                    if (debug == 1 || debug == 2) py::print("=> warning: no face polygon for egde ", i);
                     edge_list[i].segments = nullptr;
                     edge_list[i].num_segments = 0;
                     edge_list[i].edge_type = -1;
                 }
             } else {
-                if (debug == 1) py::print("=> warning: no face ancestors for egde ", i);
+                if (debug == 1 || debug == 2) py::print("=> warning: no face ancestors for egde ", i);
                 edge_list[i].segments = nullptr;
                 edge_list[i].num_segments = 0;
                 edge_list[i].edge_type = -1;
