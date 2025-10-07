@@ -50,6 +50,16 @@ py::array_t<T> wrap_numpy(T *ptr, int n)
     );
 }
 
+float *convert_to_float(const double *input, size_t size)
+{
+    float *result = new float[size];
+    for (size_t i = 0; i < size; ++i)
+    {
+        result[i] = static_cast<float>(input[i]);
+    }
+    return result; // Caller is responsible for delete[]
+}
+
 GeomAbs_SurfaceType get_face_type(TopoDS_Face face)
 {
     return BRepAdaptor_Surface(face).GetType();
@@ -68,7 +78,7 @@ MeshData collect_mesh_data(
     EdgeData edge_list[],
     int num_segments,
     int num_edges,
-    float obj_vertices[],
+    double obj_vertices[],
     int num_obj_vertices,
     bool compute_missing_normals,
     bool compute_missing_edges,
@@ -79,8 +89,8 @@ MeshData collect_mesh_data(
      */
     auto start = get_timer();
 
-    auto vertices = new float[3 * num_vertices];
-    auto normals = new float[3 * num_vertices];
+    auto vertices = new double[3 * num_vertices];
+    auto normals = new double[3 * num_vertices];
     auto triangles = new int[3 * num_triangles];
     auto triangles_per_face = new int[num_faces];
     auto face_types = new int[num_faces];
@@ -100,8 +110,8 @@ MeshData collect_mesh_data(
 
         for (int j = 0; j < f.num_vertices * 3; j++)
         {
-            vertices[v_total + j] = static_cast<float>(v[j]);
-            normals[v_total + j] = static_cast<float>(n[j]);
+            vertices[v_total + j] = v[j];
+            normals[v_total + j] = n[j];
         }
 
         for (int j = 0; j < f.num_triangles * 3; j++)
@@ -126,27 +136,27 @@ MeshData collect_mesh_data(
 
         for (int i = 0; i < num_triangles; i++)
         {
-            float c0_0 = static_cast<float>(vertices[3 * triangles[3 * i + 0] + 0]);
-            float c0_1 = static_cast<float>(vertices[3 * triangles[3 * i + 0] + 1]);
-            float c0_2 = static_cast<float>(vertices[3 * triangles[3 * i + 0] + 2]);
-            float c1_0 = static_cast<float>(vertices[3 * triangles[3 * i + 1] + 0]);
-            float c1_1 = static_cast<float>(vertices[3 * triangles[3 * i + 1] + 1]);
-            float c1_2 = static_cast<float>(vertices[3 * triangles[3 * i + 1] + 2]);
-            float c2_0 = static_cast<float>(vertices[3 * triangles[3 * i + 2] + 0]);
-            float c2_1 = static_cast<float>(vertices[3 * triangles[3 * i + 2] + 1]);
-            float c2_2 = static_cast<float>(vertices[3 * triangles[3 * i + 2] + 2]);
+            double c0_0 = (vertices[3 * triangles[3 * i + 0] + 0]);
+            double c0_1 = (vertices[3 * triangles[3 * i + 0] + 1]);
+            double c0_2 = (vertices[3 * triangles[3 * i + 0] + 2]);
+            double c1_0 = (vertices[3 * triangles[3 * i + 1] + 0]);
+            double c1_1 = (vertices[3 * triangles[3 * i + 1] + 1]);
+            double c1_2 = (vertices[3 * triangles[3 * i + 1] + 2]);
+            double c2_0 = (vertices[3 * triangles[3 * i + 2] + 0]);
+            double c2_1 = (vertices[3 * triangles[3 * i + 2] + 1]);
+            double c2_2 = (vertices[3 * triangles[3 * i + 2] + 2]);
             // c2 - c1
-            float v1_0 = static_cast<float>(c2_0 - c1_0);
-            float v1_1 = static_cast<float>(c2_1 - c1_1);
-            float v1_2 = static_cast<float>(c2_2 - c1_2);
+            double v1_0 = (c2_0 - c1_0);
+            double v1_1 = (c2_1 - c1_1);
+            double v1_2 = (c2_2 - c1_2);
             // c0 - c1
-            float v2_0 = static_cast<float>(c0_0 - c1_0);
-            float v2_1 = static_cast<float>(c0_1 - c1_1);
-            float v2_2 = static_cast<float>(c0_2 - c1_2);
+            double v2_0 = (c0_0 - c1_0);
+            double v2_1 = (c0_1 - c1_1);
+            double v2_2 = (c0_2 - c1_2);
             // cross product of v1 and v2
-            float n_0 = static_cast<float>(v1_1 * v2_2 - v1_2 * v2_1);
-            float n_1 = static_cast<float>(v1_2 * v2_0 - v1_0 * v2_2);
-            float n_2 = static_cast<float>(v1_0 * v2_1 - v1_1 * v2_0);
+            double n_0 = (v1_1 * v2_2 - v1_2 * v2_1);
+            double n_1 = (v1_2 * v2_0 - v1_0 * v2_2);
+            double n_2 = (v1_0 * v2_1 - v1_1 * v2_0);
             // interpolate vertex normal by blending all face normals of a vertex
             for (int j = 0; j < 3; j++)
             {
@@ -158,7 +168,7 @@ MeshData collect_mesh_data(
         // and normalize later
         for (int i = 0; i < num_vertices; i++)
         {
-            float norm = static_cast<float>(sqrt(normals[3 * i] * normals[3 * i] + normals[3 * i + 1] * normals[3 * i + 1] + normals[3 * i + 2] * normals[3 * i + 2]));
+            double norm = sqrt(normals[3 * i] * normals[3 * i] + normals[3 * i + 1] * normals[3 * i + 1] + normals[3 * i + 2] * normals[3 * i + 2]);
             normals[3 * i] /= norm;
             normals[3 * i + 1] /= norm;
             normals[3 * i + 2] /= norm;
@@ -173,7 +183,7 @@ MeshData collect_mesh_data(
     if (timeit)
         start = get_timer();
 
-    auto segments = new float[6 * num_segments];
+    auto segments = new double[6 * num_segments];
     auto segments_per_edge = new int[num_edges];
 
     /*
@@ -186,20 +196,20 @@ MeshData collect_mesh_data(
         auto start2 = get_timer();
         num_edges = num_triangles;
         num_segments = 3 * num_triangles;
-        segments = new float[18 * num_edges];
+        segments = new double[18 * num_edges];
         segments_per_edge = new int[num_edges];
 
         for (int i = 0; i < num_triangles; i++)
         {
-            float c0_0 = static_cast<float>(vertices[3 * triangles[3 * i + 0] + 0]);
-            float c0_1 = static_cast<float>(vertices[3 * triangles[3 * i + 0] + 1]);
-            float c0_2 = static_cast<float>(vertices[3 * triangles[3 * i + 0] + 2]);
-            float c1_0 = static_cast<float>(vertices[3 * triangles[3 * i + 1] + 0]);
-            float c1_1 = static_cast<float>(vertices[3 * triangles[3 * i + 1] + 1]);
-            float c1_2 = static_cast<float>(vertices[3 * triangles[3 * i + 1] + 2]);
-            float c2_0 = static_cast<float>(vertices[3 * triangles[3 * i + 2] + 0]);
-            float c2_1 = static_cast<float>(vertices[3 * triangles[3 * i + 2] + 1]);
-            float c2_2 = static_cast<float>(vertices[3 * triangles[3 * i + 2] + 2]);
+            double c0_0 = vertices[3 * triangles[3 * i + 0] + 0];
+            double c0_1 = vertices[3 * triangles[3 * i + 0] + 1];
+            double c0_2 = vertices[3 * triangles[3 * i + 0] + 2];
+            double c1_0 = vertices[3 * triangles[3 * i + 1] + 0];
+            double c1_1 = vertices[3 * triangles[3 * i + 1] + 1];
+            double c1_2 = vertices[3 * triangles[3 * i + 1] + 2];
+            double c2_0 = vertices[3 * triangles[3 * i + 2] + 0];
+            double c2_1 = vertices[3 * triangles[3 * i + 2] + 1];
+            double c2_2 = vertices[3 * triangles[3 * i + 2] + 2];
             segments[e_total + 0] = c0_0;
             segments[e_total + 1] = c0_1;
             segments[e_total + 2] = c0_2;
@@ -232,7 +242,7 @@ MeshData collect_mesh_data(
 
             for (int j = 0; j < 6 * e.num_segments; j++)
             {
-                segments[e_total + j] = static_cast<float>(e.segments[j]);
+                segments[e_total + j] = e.segments[j];
             }
             segments_per_edge[i] = e.num_segments;
             edge_types[i] = e.edge_type;
@@ -248,15 +258,25 @@ MeshData collect_mesh_data(
 
     MeshData mesh_data;
 
-    mesh_data.vertices = wrap_numpy(vertices, 3 * num_vertices);
-    mesh_data.normals = wrap_numpy(normals, 3 * num_vertices);
+    float *vertices32 = convert_to_float(vertices, 3 * num_vertices);
+    float *normals32 = convert_to_float(normals, 3 * num_vertices);
+    float *obj_vertices32 = convert_to_float(obj_vertices, 3 * num_obj_vertices);
+    float *segments32 = convert_to_float(segments, 6 * num_segments);
+
+    mesh_data.vertices = wrap_numpy(vertices32, 3 * num_vertices);
+    mesh_data.normals = wrap_numpy(normals32, 3 * num_vertices);
     mesh_data.triangles = wrap_numpy(triangles, 3 * num_triangles);
     mesh_data.triangles_per_face = wrap_numpy(triangles_per_face, num_faces);
     mesh_data.face_types = wrap_numpy(face_types, num_faces);
     mesh_data.edge_types = wrap_numpy(edge_types, num_edges);
-    mesh_data.obj_vertices = wrap_numpy(obj_vertices, 3 * num_obj_vertices);
-    mesh_data.segments = wrap_numpy(segments, 6 * num_segments);
+    mesh_data.obj_vertices = wrap_numpy(obj_vertices32, 3 * num_obj_vertices);
+    mesh_data.segments = wrap_numpy(segments32, 6 * num_segments);
     mesh_data.segments_per_edge = wrap_numpy(segments_per_edge, num_edges);
+
+    delete[] vertices;
+    delete[] obj_vertices;
+    delete[] normals;
+    delete[] segments;
 
     if (timeit)
         stop_timer(start, "Cast to numpy");
@@ -518,14 +538,14 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
 
     int num_vertices = vertex_map.Extent();
 
-    float *vertex_list = new float[3 * num_vertices];
+    double *vertex_list = new double[3 * num_vertices];
     for (int i = 0; i < num_vertices; i++)
     {
         const TopoDS_Vertex &topods_vertex = TopoDS::Vertex(vertex_map.FindKey(i + 1));
         gp_Pnt p = BRep_Tool::Pnt(topods_vertex);
-        vertex_list[3 * i + 0] = static_cast<float>(p.X());
-        vertex_list[3 * i + 1] = static_cast<float>(p.Y());
-        vertex_list[3 * i + 2] = static_cast<float>(p.Z());
+        vertex_list[3 * i + 0] = p.X();
+        vertex_list[3 * i + 1] = p.Y();
+        vertex_list[3 * i + 2] = p.Z();
     }
 
     if (timeit)
