@@ -142,8 +142,9 @@ std::string readable_typename()
 #ifdef _MSC_VER
     // MSVC: No standard demangling, just return name
     return typeid(T).name();
+
 #else
-// GCC/Clang: Use demangling
+
 #include <cxxabi.h>
     int status = 0;
     char *demangled = abi::__cxa_demangle(typeid(T).name(), nullptr, nullptr, &status);
