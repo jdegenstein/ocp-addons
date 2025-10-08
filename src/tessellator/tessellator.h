@@ -13,12 +13,17 @@
 #include <BRepAdaptor_Curve.hxx>
 #include <BRepAdaptor_Surface.hxx>
 #include <BRepCheck_Analyzer.hxx>
+#include <BRepCheck_Analyzer.hxx>
+#include <BRepCheck_Result.hxx>
 #include <BRepGProp_Face.hxx>
 #include <BRepMesh_IncrementalMesh.hxx>
 #include <BRepTools.hxx>
 #include <IMeshTools_Parameters.hxx>
 #include <Poly_PolygonOnTriangulation.hxx>
 #include <Poly_Triangulation.hxx>
+#include <ShapeFix_Shape.hxx>
+#include <TopAbs_ShapeEnum.hxx>
+#include <TopExp_Explorer.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopExp.hxx>
 #include <TopoDS_Edge.hxx>
@@ -27,11 +32,6 @@
 #include <TopoDS_Vertex.hxx>
 #include <TopoDS.hxx>
 #include <TopTools_IndexedMapOfShape.hxx>
-
-#include <BRepCheck_Analyzer.hxx>
-#include <TopExp_Explorer.hxx>
-#include <BRepCheck_Result.hxx>
-#include <TopAbs_ShapeEnum.hxx>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>

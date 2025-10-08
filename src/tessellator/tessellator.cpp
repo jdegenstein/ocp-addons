@@ -344,6 +344,10 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
             {
                 const TopoDS_Face &topods_face = TopoDS::Face(face_map.FindKey(i + 1));
 
+                Handle(ShapeFix_Shape) fixer = new ShapeFix_Shape(shape);
+                fixer->Perform();
+                TopoDS_Shape healedShape = fixer->Shape();
+
                 PrintCheckStatuses(topods_face, i);
 
                 TopAbs_Orientation orient = topods_face.Orientation();
