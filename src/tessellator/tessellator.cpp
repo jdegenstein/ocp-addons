@@ -342,13 +342,11 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
 
             for (int i = 0; i < num_faces; i++)
             {
-                const TopoDS_Face &topods_face_in = TopoDS::Face(face_map.FindKey(i + 1));
-
-                Handle(ShapeFix_Face) face_fixer = new ShapeFix_Face(topods_face_in);
-                face_fixer->Perform();
-                const TopoDS_Face topods_face = face_fixer->Face();
+                const TopoDS_Face &topods_face = TopoDS::Face(face_map.FindKey(i + 1));
 
                 PrintCheckStatuses(topods_face, i);
+                std::string filename = "face" + std::to_string(i) + ".occ";
+                BRepTools::Write(topods_face, filename.c_str());
 
                 TopAbs_Orientation orient = topods_face.Orientation();
                 Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation(topods_face, loc);

@@ -9,6 +9,7 @@
 #include <TopAbs_ShapeEnum.hxx>
 #include <TopoDS_Face.hxx>
 #include <BRepCheck.hxx>
+#include <BRepTools.hxx>
 
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
