@@ -1,34 +1,25 @@
-#include <iostream>
-#include <vector>
-#include <algorithm>
-#include <numeric>
-#include <chrono>
-#include <cmath>
-#include <cstddef>
-
-#include <pybind11/pybind11.h>
-#include <pybind11/stl.h>
-#include <pybind11/numpy.h>
-
+#include <BinTools.hxx>
 #include <BRep_Builder.hxx>
-#include <BRepTools.hxx>
+#include <BRepAdaptor_Curve.hxx>
+#include <BRepAdaptor_Surface.hxx>
+#include <BRepCheck_Analyzer.hxx>
+#include <BRepGProp_Face.hxx>
 #include <BRepMesh_IncrementalMesh.hxx>
+#include <BRepTools.hxx>
+#include <IMeshTools_Parameters.hxx>
+#include <Poly_PolygonOnTriangulation.hxx>
+#include <Poly_Triangulation.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopExp.hxx>
-#include <TopoDS.hxx>
-#include <TopoDS_Shape.hxx>
-#include <TopoDS_Face.hxx>
 #include <TopoDS_Edge.hxx>
+#include <TopoDS_Face.hxx>
+#include <TopoDS_Shape.hxx>
 #include <TopoDS_Vertex.hxx>
-#include <BinTools.hxx>
-#include <IMeshTools_Parameters.hxx>
-#include <Poly_Triangulation.hxx>
-#include <Poly_PolygonOnTriangulation.hxx>
-#include <BRepGProp_Face.hxx>
+#include <TopoDS.hxx>
 #include <TopTools_IndexedMapOfShape.hxx>
-#include <BRepAdaptor_Surface.hxx>
-#include <BRepAdaptor_Curve.hxx>
-#include <BRepCheck_Analyzer.hxx>
+
+#include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
 
 namespace py = pybind11;
 

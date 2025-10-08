@@ -1,32 +1,7 @@
 #include "tessellator.h"
+#include "utils.h"
 
-auto get_timer()
-{
-    return std::chrono::high_resolution_clock::now();
-}
-
-void stop_timer(std::chrono::time_point<std::chrono::high_resolution_clock> start, std::string message)
-{
-    auto done = get_timer();
-    double d = (std::chrono::duration_cast<std::chrono::milliseconds>(done - start).count()) / 1000.0;
-    std::stringstream stream;
-    stream << std::fixed << std::setprecision(3) << std::setw(8) << d;
-    std::string s = stream.str();
-    py::print(s, "sec: | | |", message);
-}
-
-void log(std::string message)
-{
-    py::print(message);
-}
-
-template <typename T>
-void log_xyz(std::string msg, T x, T y, T z, bool endline = true)
-{
-    py::print(msg, ":", "(", x, ",", y, ",", z, ")");
-    if (endline)
-        py::print();
-}
+namespace py = pybind11;
 
 // Helper to wrap a raw new[] pointer into a NumPy array with ownership transfer
 template <typename T>
@@ -34,7 +9,7 @@ py::array_t<T> wrap_numpy(T *ptr, int n)
 {
     if (sizeof(T) != 4)
     {
-        throw std::invalid_argument(("ERROR: Wrong bit size of value, numpy array will be broken");
+        throw std::invalid_argument("ERROR: Wrong bit size of value, numpy array will be broken");
     }
     // Capsule will call delete[] when the array is GC’d
     py::capsule owner(ptr, [](void *p)
@@ -87,7 +62,8 @@ MeshData collect_mesh_data(
     /*
      * Collect vertices and triangles
      */
-    auto start = get_timer();
+
+    Timer timer("Collect vertices and triangles", 2, timeit);
 
     auto vertices = new double[3 * num_vertices];
     auto normals = new double[3 * num_vertices];
@@ -127,7 +103,7 @@ MeshData collect_mesh_data(
     }
     if (compute_missing_normals)
     {
-        auto start2 = get_timer();
+        timer.reset("Interpolating normals", 2);
 
         for (int i = 0; i < 3 * num_vertices; i++)
         {
@@ -173,15 +149,7 @@ MeshData collect_mesh_data(
             normals[3 * i + 1] /= norm;
             normals[3 * i + 2] /= norm;
         }
-        if (timeit)
-            stop_timer(start2, "Interpolating normals");
     }
-
-    if (timeit)
-        stop_timer(start, "Collect vertices and triangles");
-
-    if (timeit)
-        start = get_timer();
 
     auto segments = new double[6 * num_segments];
     auto segments_per_edge = new int[num_edges];
@@ -193,7 +161,8 @@ MeshData collect_mesh_data(
 
     if (compute_missing_edges)
     {
-        auto start2 = get_timer();
+        timer.reset("Compute missing edges", 2);
+
         num_edges = num_triangles;
         num_segments = 3 * num_triangles;
         segments = new double[18 * num_edges];
@@ -231,11 +200,10 @@ MeshData collect_mesh_data(
             e_total += 18;
             segments_per_edge[i] = 3;
         }
-        if (timeit)
-            stop_timer(start2, "Creating all triangle edges");
     }
     else
     {
+        timer.reset("Collecting edges", 2);
         for (int i = 0; i < num_edges; i++)
         {
             auto e = edge_list[i];
@@ -250,18 +218,19 @@ MeshData collect_mesh_data(
             e_total += 6 * e.num_segments;
         }
     }
-    if (timeit)
-        stop_timer(start, "Collect edges");
 
-    if (timeit)
-        start = get_timer();
+    timer.reset("Create MeshData", 2);
 
     MeshData mesh_data;
+
+    timer.reset("Cast to float", 2);
 
     float *vertices32 = convert_to_float(vertices, 3 * num_vertices);
     float *normals32 = convert_to_float(normals, 3 * num_vertices);
     float *obj_vertices32 = convert_to_float(obj_vertices, 3 * num_obj_vertices);
     float *segments32 = convert_to_float(segments, 6 * num_segments);
+
+    timer.reset("Cast to numpy", 2);
 
     // wrap_numpy use a capsule, so Python triggers deletion
     mesh_data.vertices = wrap_numpy(vertices32, 3 * num_vertices);
@@ -279,8 +248,7 @@ MeshData collect_mesh_data(
     delete[] normals;
     delete[] segments;
 
-    if (timeit)
-        stop_timer(start, "Cast to numpy");
+    timer.stop();
 
     return mesh_data;
 }
@@ -292,26 +260,22 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
      * Tessellate mesh
      */
 
-    // https://dev.opencascade.org/node/81262#comment-21130
-    // BRepTools::Clean(shape);
-
-    auto start = get_timer();
+    Logger logger(debug);
+    Timer overall("Overall", 0, timeit);
+    Timer timer;
 
     if (compute_edges || compute_faces)
     {
-        if (debug == 1 || debug == 2)
-        {
-            py::print("deflection", deflection, "angular_tolerance", angular_tolerance, "parallel", parallel, "\n");
-        }
+        logger.info("deflection", deflection, "angular_tolerance", angular_tolerance, "parallel", parallel);
+        timer.start("Computing BRep incremental mesh", 1, timeit);
+
+        // https://dev.opencascade.org/node/81262#comment-21130
         BRepTools::Clean(shape);
         BRepMesh_IncrementalMesh mesher(shape, deflection, Standard_False, angular_tolerance, parallel);
-        if (debug == 1 || debug == 2)
-        {
-            py::print("IsDone", mesher.IsDone(), "\n");
-            py::print("GetStatusFlags", mesher.GetStatusFlags(), "\n");
-        }
-        if (timeit)
-            stop_timer(start, "Computing BRep incremental mesh");
+        logger.debug("IsDone", mesher.IsDone());
+        logger.debug("GetStatusFlags", mesher.GetStatusFlags());
+
+        timer.stop();
     }
     TopLoc_Location loc;
 
@@ -324,8 +288,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
 
     if (compute_faces)
     {
-        if (timeit)
-            start = get_timer();
+        timer.start("Computing tessellation", 1, timeit);
 
         TopTools_IndexedMapOfShape face_map = TopTools_IndexedMapOfShape();
         TopExp::MapShapes(shape, TopAbs_FACE, face_map);
@@ -333,8 +296,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
         num_faces = face_map.Extent();
         face_list = new FaceData[num_faces];
 
-        if (debug == 1 || debug == 2)
-            py::print("num_faces", num_faces, "\n");
+        logger.debug("num_faces", num_faces);
 
         try
         {
@@ -346,8 +308,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
 
                 BRepCheck_Analyzer checker(topods_face);
                 bool valid = checker.IsValid();
-                if (debug == 2)
-                    py::print("face", i, "is", valid);
+                logger.debug("face", i, "is", valid);
 
                 TopAbs_Orientation orient = topods_face.Orientation();
                 Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation(topods_face, loc);
@@ -370,8 +331,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
                         face_list[i].vertices[3 * j + 1] = point.Y();
                         face_list[i].vertices[3 * j + 2] = point.Z();
 
-                        if (debug == 2)
-                            log_xyz("vertex", point.X(), point.Y(), point.Z(), false);
+                        logger.trace_xyz("vertex", point.X(), point.Y(), point.Z(), false);
 
                         if (triangulation->HasUVNodes())
                         {
@@ -389,8 +349,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
                             face_list[i].normals[3 * j + 1] = normal.Y();
                             face_list[i].normals[3 * j + 2] = normal.Z();
 
-                            if (debug == 2)
-                                log_xyz(" normal", normal.X(), normal.Y(), normal.Z());
+                            logger.trace_xyz(" normal", normal.X(), normal.Y(), normal.Z(), false);
                         }
                     }
 
@@ -403,10 +362,9 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
                         face_list[i].triangles[3 * j + 1] = offset + ((orient == TopAbs_REVERSED) ? index2 : index1);
                         face_list[i].triangles[3 * j + 2] = offset + ((orient == TopAbs_REVERSED) ? index1 : index2);
 
-                        if (debug == 2)
-                            log_xyz("triangle ", offset + index0,
-                                    offset + ((orient == TopAbs_REVERSED) ? index2 : index1),
-                                    offset + ((orient == TopAbs_REVERSED) ? index1 : index2));
+                        logger.trace_xyz("triangle ", offset + index0,
+                                         offset + ((orient == TopAbs_REVERSED) ? index2 : index1),
+                                         offset + ((orient == TopAbs_REVERSED) ? index1 : index2), false);
                     }
 
                     // triangle_count += num_triangles * 3;
@@ -421,8 +379,8 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
                 }
                 else
                 {
-                    if (debug == 1 || debug == 2)
-                        py::print("=> warning: Triangulation is null for face ", i, "\n");
+                    logger.info("=> warning: Triangulation is null for face ", i, "\n");
+
                     face_list[i].vertices = nullptr;
                     face_list[i].normals = nullptr;
                     face_list[i].triangles = nullptr;
@@ -440,8 +398,8 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
         {
             py::print("Error: unknown\n");
         }
-        if (timeit)
-            stop_timer(start, "Computing tessellation");
+
+        timer.stop();
     }
 
     /*
@@ -455,8 +413,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
 
     if (compute_edges)
     {
-        if (timeit)
-            start = get_timer();
+        timer.start("Computing edges", 1, timeit);
 
         TopTools_IndexedMapOfShape edge_map = TopTools_IndexedMapOfShape();
         TopTools_IndexedDataMapOfShapeListOfShape ancestor_map = TopTools_IndexedDataMapOfShapeListOfShape();
@@ -507,8 +464,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
                 }
                 else
                 {
-                    if (debug == 1 || debug == 2)
-                        py::print("=> warning: no face polygon for egde ", i);
+                    logger.debug("=> warning: no face polygon for egde ", i);
                     edge_list[i].segments = nullptr;
                     edge_list[i].num_segments = 0;
                     edge_list[i].edge_type = -1;
@@ -516,23 +472,20 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
             }
             else
             {
-                if (debug == 1 || debug == 2)
-                    py::print("=> warning: no face ancestors for egde ", i);
+                logger.debug("=> warning: no face ancestors for egde ", i);
                 edge_list[i].segments = nullptr;
                 edge_list[i].num_segments = 0;
                 edge_list[i].edge_type = -1;
             }
         }
-        if (timeit)
-            stop_timer(start, "Computing edges");
+        timer.stop();
     }
 
     /*
      * Collect vertices
      */
 
-    if (timeit)
-        start = get_timer();
+    timer.start("Computing vertices", 1, timeit);
 
     TopTools_IndexedMapOfShape vertex_map = TopTools_IndexedMapOfShape();
     TopExp::MapShapes(shape, TopAbs_VERTEX, vertex_map);
@@ -549,8 +502,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
         vertex_list[3 * i + 2] = p.Z();
     }
 
-    if (timeit)
-        stop_timer(start, "Computing vertices");
+    timer.reset("Collecting mesh data", 1);
 
     // Return the struct
     auto result = collect_mesh_data(
@@ -567,18 +519,18 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
         compute_edges ? (num_edges == 0) : false, // calculate all triangles edges
         timeit);
 
-    if (debug == 2)
-    {
-        py::print("vertices", result.vertices, result.vertices.dtype());
-        py::print("normals", result.normals, result.normals.dtype());
-        py::print("triangles", result.triangles, result.triangles.dtype());
-        py::print("triangles_per_face", result.triangles_per_face, result.triangles_per_face.dtype());
-        py::print("face_types", result.face_types, result.face_types.dtype());
-        py::print("segments", result.segments, result.segments.dtype());
-        py::print("segments_per_edge", result.segments_per_edge, result.segments_per_edge.dtype());
-        py::print("edge_types", result.edge_types, result.edge_types.dtype());
-        py::print("obj_vertices", result.obj_vertices, result.obj_vertices.dtype());
-    }
+    timer.stop();
+    overall.stop();
+
+    logger.debug("vertices", result.vertices, result.vertices.dtype());
+    logger.debug("normals", result.normals, result.normals.dtype());
+    logger.debug("triangles", result.triangles, result.triangles.dtype());
+    logger.debug("triangles_per_face", result.triangles_per_face, result.triangles_per_face.dtype());
+    logger.debug("face_types", result.face_types, result.face_types.dtype());
+    logger.debug("segments", result.segments, result.segments.dtype());
+    logger.debug("segments_per_edge", result.segments_per_edge, result.segments_per_edge.dtype());
+    logger.debug("edge_types", result.edge_types, result.edge_types.dtype());
+    logger.debug("obj_vertices", result.obj_vertices, result.obj_vertices.dtype());
 
     return result;
 }
