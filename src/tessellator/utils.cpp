@@ -37,3 +37,13 @@ void Timer::reset(const std::string &message, bool timeit)
     timeit_ = timeit;
     start_ = std::chrono::high_resolution_clock::now();
 }
+
+float *convert_to_float(const double *input, size_t size)
+{
+    float *result = new float[size];
+    for (size_t i = 0; i < size; ++i)
+    {
+        result[i] = static_cast<float>(input[i]);
+    }
+    return result; // Caller is responsible for delete[]
+}

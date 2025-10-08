@@ -3,41 +3,6 @@
 
 namespace py = pybind11;
 
-// Helper to wrap a raw new[] pointer into a NumPy array with ownership transfer
-template <typename T>
-py::array_t<T> wrap_numpy(T *ptr, int n)
-{
-    if (sizeof(T) != 4)
-    {
-        throw std::invalid_argument(
-            std::string("ERROR: Wrong byte size " + std::to_string(sizeof(T)) + " of value '") +
-            readable_typename<T>() +
-            "', numpy array will be broken");
-    }
-    // Capsule will call delete[] when the array is GC’d
-    py::capsule owner(ptr, [](void *p)
-                      {
-        T* t = reinterpret_cast<T*>(p);
-        delete[] t; });
-    // 1D array: shape [n], stride [sizeof(T)]
-    return py::array_t<T>(
-        {n},         // shape
-        {sizeof(T)}, // int32 or float
-        ptr,         // data pointer
-        owner        // base/owner capsule
-    );
-}
-
-float *convert_to_float(const double *input, size_t size)
-{
-    float *result = new float[size];
-    for (size_t i = 0; i < size; ++i)
-    {
-        result[i] = static_cast<float>(input[i]);
-    }
-    return result; // Caller is responsible for delete[]
-}
-
 GeomAbs_SurfaceType get_face_type(TopoDS_Face face)
 {
     return BRepAdaptor_Surface(face).GetType();
@@ -47,6 +12,41 @@ GeomAbs_CurveType get_edge_type(TopoDS_Edge edge)
 {
     return BRepAdaptor_Curve(edge).GetType();
 }
+
+/**
+ * @brief Collects and processes mesh data from face and edge lists into a unified MeshData structure.
+ *
+ * This function aggregates vertex, triangle, and edge data from multiple faces and edges into
+ * consolidated arrays. It can optionally compute missing vertex normals using face normal
+ * interpolation and generate triangle edges when edge data is not provided.
+ *
+ * @param face_list Array of FaceData structures containing face geometry information
+ * @param num_vertices Total number of vertices across all faces
+ * @param num_triangles Total number of triangles across all faces
+ * @param num_faces Number of faces in the face_list array
+ * @param edge_list Array of EdgeData structures containing edge segment information
+ * @param num_segments Total number of edge segments across all edges
+ * @param num_edges Number of edges in the edge_list array
+ * @param obj_vertices Array of additional object vertices (external geometry)
+ * @param num_obj_vertices Number of vertices in obj_vertices array
+ * @param compute_missing_normals If true, computes vertex normals by interpolating face normals
+ * @param compute_missing_edges If true, generates edge segments from triangle edges when edge data is unavailable
+ * @param timeit If true, enables timing measurements for performance profiling
+ *
+ * @return MeshData structure containing consolidated mesh geometry with numpy-wrapped arrays
+ *
+ * @details The function performs the following operations:
+ * - Consolidates vertices, normals, and triangles from all faces into unified arrays
+ * - Optionally computes vertex normals by averaging adjacent face normals and normalizing
+ * - Collects edge segments from provided edge data or generates them from triangle edges
+ * - Converts all floating-point data from double to float precision
+ * - Wraps all arrays in numpy-compatible format with automatic memory management
+ * - Tracks triangles and segments per face/edge for proper indexing
+ * - Includes timing measurements for performance analysis when enabled
+ *
+ * @note Memory for intermediate arrays is automatically cleaned up after numpy wrapping.
+ *       The returned MeshData uses capsules for proper Python memory management.
+ */
 
 MeshData collect_mesh_data(
     FaceData face_list[],
@@ -255,6 +255,41 @@ MeshData collect_mesh_data(
 
     return mesh_data;
 }
+
+/**
+ * @brief Tessellates a TopoDS_Shape into a mesh representation with vertices, triangles, and edges.
+ *
+ * This function performs mesh tessellation on an OpenCascade TopoDS_Shape object, generating
+ * triangulated faces, edge segments, and vertex data. It uses BRepMesh_IncrementalMesh for
+ * the underlying tessellation and supports parallel processing.
+ *
+ * @param shape The TopoDS_Shape object to tessellate
+ * @param deflection Maximum allowed deviation between the original surface and the tessellated mesh
+ * @param angular_tolerance Angular tolerance for tessellation in radians
+ * @param compute_faces Whether to compute face triangulation data
+ * @param compute_edges Whether to compute edge segment data
+ * @param parallel Whether to enable parallel processing during tessellation
+ * @param debug Debug level for logging (0 = no debug output)
+ * @param timeit Whether to measure and report timing information
+ *
+ * @return MeshData structure containing:
+ *         - vertices: Array of vertex coordinates (x,y,z)
+ *         - normals: Array of vertex normals (if available)
+ *         - triangles: Array of triangle indices
+ *         - triangles_per_face: Number of triangles per face
+ *         - face_types: Type classification for each face
+ *         - segments: Array of edge segment coordinates
+ *         - segments_per_edge: Number of segments per edge
+ *         - edge_types: Type classification for each edge
+ *         - obj_vertices: Original shape vertices
+ *
+ * @note The function handles orientation correction for reversed faces and computes normals
+ *       when UV nodes are available in the triangulation. Edge processing requires face
+ *       ancestors to be present.
+ *
+ * @warning Memory allocation is performed for face and edge data arrays. Proper cleanup
+ *          should be handled by the MeshData structure or calling code.
+ */
 
 MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolerance,
                     bool compute_faces, bool compute_edges, bool parallel, int debug, bool timeit)
@@ -538,6 +573,23 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
     return result;
 }
 
+/**
+ * @brief Registers the tessellator module with pybind11
+ *
+ * This function creates a submodule called "tessellator" within the global module
+ * and registers the MeshData class along with the tessellate function for Python binding.
+ *
+ * The MeshData class exposes read-only properties for mesh data including:
+ * - vertices: Vertex coordinates
+ * - normals: Normal vectors
+ * - triangles: Triangle indices
+ * - face_types: Types of faces
+ * - triangles_per_face: Number of triangles per face
+ * - segments: Line segments
+ * - segments_per_edge: Number of segments per edge
+ * - edge_types: Types of edges
+ * - obj_vertices: Object vertices
+ */
 void register_tessellator(pybind11::module_ &m_gbl)
 {
     auto m = m_gbl.def_submodule("tessellator");
