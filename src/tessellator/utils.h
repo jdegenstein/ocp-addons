@@ -139,11 +139,19 @@ private:
 template <typename T>
 std::string readable_typename()
 {
+#ifdef _MSC_VER
+    // MSVC: No standard demangling, just return name
+    return typeid(T).name();
+#else
+// GCC/Clang: Use demangling
+#include <cxxabi.h>
     int status = 0;
-    std::unique_ptr<char, void (*)(void *)> res{
-        abi::__cxa_demangle(typeid(T).name(), nullptr, nullptr, &status),
-        std::free};
-    return (status == 0 && res) ? res.get() : typeid(T).name();
+    char *demangled = abi::__cxa_demangle(typeid(T).name(), nullptr, nullptr, &status);
+    std::string result = (status == 0 && demangled) ? demangled : typeid(T).name();
+    if (demangled)
+        free(demangled);
+    return result;
+#endif
 }
 
 /**
