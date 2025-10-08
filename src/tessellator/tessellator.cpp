@@ -344,9 +344,7 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
             {
                 const TopoDS_Face &topods_face = TopoDS::Face(face_map.FindKey(i + 1));
 
-                BRepCheck_Analyzer checker(topods_face);
-                bool valid = checker.IsValid();
-                logger.debug("face", i, "is", valid);
+                PrintCheckStatuses(topods_face, i);
 
                 TopAbs_Orientation orient = topods_face.Orientation();
                 Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation(topods_face, loc);

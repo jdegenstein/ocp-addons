@@ -2,6 +2,14 @@
 
 #include <chrono>
 #include <iomanip>
+
+#include <BRepCheck_Analyzer.hxx>
+#include <TopExp_Explorer.hxx>
+#include <BRepCheck_Result.hxx>
+#include <TopAbs_ShapeEnum.hxx>
+#include <TopoDS_Face.hxx>
+#include <BRepCheck.hxx>
+
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 
@@ -217,3 +225,5 @@ py::array_t<T> wrap_numpy(T *ptr, int n)
  */
 
 float *convert_to_float(const double *input, size_t size);
+
+void PrintCheckStatuses(const TopoDS_Face &face, int index);

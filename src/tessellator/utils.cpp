@@ -47,3 +47,62 @@ float *convert_to_float(const double *input, size_t size)
     }
     return result; // Caller is responsible for delete[]
 }
+
+std::string ShapeEnumToString(TopAbs_ShapeEnum type)
+{
+    switch (type)
+    {
+    case TopAbs_COMPOUND:
+        return "TopAbs_COMPOUND";
+    case TopAbs_COMPSOLID:
+        return "TopAbs_COMPSOLID";
+    case TopAbs_SOLID:
+        return "TopAbs_SOLID";
+    case TopAbs_SHELL:
+        return "TopAbs_SHELL";
+    case TopAbs_FACE:
+        return "TopAbs_FACE";
+    case TopAbs_WIRE:
+        return "TopAbs_WIRE";
+    case TopAbs_EDGE:
+        return "TopAbs_EDGE";
+    case TopAbs_VERTEX:
+        return "TopAbs_VERTEX";
+    case TopAbs_SHAPE:
+        return "TopAbs_SHAPE";
+    default:
+        return "UNKNOWN";
+    }
+}
+
+void PrintCheckStatuses(const TopoDS_Face &face, int index)
+{
+    BRepCheck_Analyzer checker(face);
+    bool valid = checker.IsValid();
+    py::print("face", index, "is", valid);
+
+    TopAbs_ShapeEnum types[] = {TopAbs_VERTEX, TopAbs_EDGE, TopAbs_WIRE, TopAbs_FACE};
+
+    for (TopAbs_ShapeEnum type : types)
+    {
+        for (TopExp_Explorer exp(face, type); exp.More(); exp.Next())
+        {
+            const TopoDS_Shape &subShape = exp.Current();
+
+            Handle(BRepCheck_Result) result = checker.Result(subShape);
+            if (!result.IsNull())
+            {
+                const BRepCheck_ListOfStatus &statusList = result->Status();
+                py::print("SubShape type: ", ShapeEnumToString(type));
+                for (BRepCheck_ListIteratorOfListOfStatus it(statusList); it.More(); it.Next())
+                {
+                    BRepCheck_Status status = it.Value();
+                    std::ostringstream oss;
+                    BRepCheck::Print(status, oss); // Outputs readable description
+                    std::string statusString = oss.str();
+                    py::print(statusString);
+                }
+            }
+        }
+    }
+}

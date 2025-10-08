@@ -28,6 +28,11 @@
 #include <TopoDS.hxx>
 #include <TopTools_IndexedMapOfShape.hxx>
 
+#include <BRepCheck_Analyzer.hxx>
+#include <TopExp_Explorer.hxx>
+#include <BRepCheck_Result.hxx>
+#include <TopAbs_ShapeEnum.hxx>
+
 #include <pybind11/pybind11.h>
 #include <pybind11/numpy.h>
 
