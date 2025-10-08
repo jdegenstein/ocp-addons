@@ -22,6 +22,8 @@
 #include <Poly_PolygonOnTriangulation.hxx>
 #include <Poly_Triangulation.hxx>
 #include <ShapeFix_Shape.hxx>
+#include <ShapeFix_Face.hxx>
+#include <ShapeFix_Edge.hxx>
 #include <TopAbs_ShapeEnum.hxx>
 #include <TopExp_Explorer.hxx>
 #include <TopExp_Explorer.hxx>

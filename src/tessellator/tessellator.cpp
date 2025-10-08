@@ -342,11 +342,11 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
 
             for (int i = 0; i < num_faces; i++)
             {
-                const TopoDS_Face &topods_face = TopoDS::Face(face_map.FindKey(i + 1));
+                const TopoDS_Face &topods_face_in = TopoDS::Face(face_map.FindKey(i + 1));
 
-                Handle(ShapeFix_Shape) fixer = new ShapeFix_Shape(shape);
-                fixer->Perform();
-                TopoDS_Shape healedShape = fixer->Shape();
+                Handle(ShapeFix_Face) face_fixer = new ShapeFix_Face(topods_face_in);
+                face_fixer->Perform();
+                const TopoDS_Face topods_face = face_fixer->Face();
 
                 PrintCheckStatuses(topods_face, i);
 
