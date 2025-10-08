@@ -39,7 +39,8 @@ elif platform.system() == "Darwin":
 
     extra_compile_args.extend([
         "-O3",
-        "-Wno-deprecated-declarations-mmacosx-version-min=11.1",
+        "-Wno-deprecated-declarations",
+        "-mmacosx-version-min=11.1",
     ])
     extra_link_args.extend(
         [
@@ -68,6 +69,7 @@ ext_modules = [
         [
             "src/modules.cpp",
             "src/tessellator/tessellator.cpp",
+            "src/tessellator/utils.cpp",
             "src/serializer/main.cpp",
         ],
         define_macros=[

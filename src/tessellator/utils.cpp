@@ -1,7 +1,7 @@
 #include "utils.h"
 
 Timer::Timer(const std::string &message, int level, bool timeit)
-    : message_(message), level_(level), timeit_(timeit), start_(std::chrono::high_resolution_clock::now()) {}
+    : message_(message), timeit_(timeit), level_(level), start_(std::chrono::high_resolution_clock::now()) {}
 
 void Timer::start(const std::string &message, int level, bool timeit)
 {
