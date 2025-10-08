@@ -30,11 +30,11 @@ void Timer::stop() const
     output();
 }
 
-void Timer::reset(const std::string &message, bool timeit)
+void Timer::reset(const std::string &message, int level)
 {
     output();
     message_ = message;
-    timeit_ = timeit;
+    level_ = level;
     start_ = std::chrono::high_resolution_clock::now();
 }
 

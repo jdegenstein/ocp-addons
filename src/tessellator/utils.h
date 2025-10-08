@@ -58,9 +58,9 @@ public:
      * @brief Resets the timer with a new message and timing flag.
      *
      * @param message New message to associate with this timer
-     * @param timeit Whether to enable timing measurements for this timer
+     * @param level Hierarchical level for nested timing operations
      */
-    void reset(const std::string &message, bool timeit);
+    void reset(const std::string &message, int level);
 
 private:
     std::string message_;
