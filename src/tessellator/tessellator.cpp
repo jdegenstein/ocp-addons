@@ -9,7 +9,10 @@ py::array_t<T> wrap_numpy(T *ptr, int n)
 {
     if (sizeof(T) != 4)
     {
-        throw std::invalid_argument("ERROR: Wrong bit size of value, numpy array will be broken");
+        throw std::invalid_argument(
+            std::string("ERROR: Wrong byte size " + std::to_string(sizeof(T)) + " of value '") +
+            readable_typename<T>() +
+            "', numpy array will be broken");
     }
     // Capsule will call delete[] when the array is GC’d
     py::capsule owner(ptr, [](void *p)

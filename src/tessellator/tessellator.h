@@ -56,3 +56,13 @@ struct MeshData
 
 MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolerance,
                     bool compute_faces, bool compute_edges, bool parallel, int debug, bool timeit);
+
+template <typename T>
+std::string readable_typename()
+{
+    int status = 0;
+    std::unique_ptr<char, void (*)(void *)> res{
+        abi::__cxa_demangle(typeid(T).name(), nullptr, nullptr, &status),
+        std::free};
+    return (status == 0 && res) ? res.get() : typeid(T).name();
+}
