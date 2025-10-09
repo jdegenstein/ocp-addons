@@ -37,7 +37,7 @@ cd ocp-addons
 
 ```bash
 micromamba env create -f environment.yml
-micromamba activate ocp-addons
+micromamba activate build-ocp-addons
 ```
 
 ### Build ocp-addons
