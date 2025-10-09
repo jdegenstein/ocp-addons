@@ -40,6 +40,13 @@ micromamba env create -f environment.yml
 micromamba activate build-ocp-addons
 ```
 
+On Linux for OCP 7.8.1 also install g++ 9.x
+```
+sudo add-apt-repository ppa:ubuntu-toolchain-r/ppa -y
+sudo apt update
+sudo apt install gcc-9 g++-9
+```
+
 ### Build ocp-addons
 
 - Linux (x86_64): `make wheel-linux`
