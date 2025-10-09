@@ -60,7 +60,11 @@ if platform.system() == "Linux":
     print("ocp_path", str(ocp_path))
     include_dirs = [str(occt_sdk)]
     library_dirs = ["./libs"]
-    extra_compile_args.extend(["-O3", "-Wno-deprecated-declarations"])
+    extra_compile_args.extend([
+        "-O3", 
+        "-Wno-deprecated-declarations", 
+        "-D_GLIBCXX_USE_CXX11_ABI=0"]
+    )
 
 elif platform.system() == "Darwin":
 
