@@ -69,7 +69,7 @@ public:
      * @param message New message to associate with this timer
      * @param level Hierarchical level for nested timing operations
      */
-    void reset(const std::string &message, int level);
+    void reset(const std::string &message, int level = 0);
 
 private:
     std::string message_;
