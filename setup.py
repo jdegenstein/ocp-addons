@@ -1,6 +1,8 @@
 import os
 import platform
 import site
+import shutil
+import sys
 import toml
 from pathlib import Path
 
@@ -9,7 +11,7 @@ from setuptools import setup
 
 version = toml.load("pyproject.toml")["project"]["version"]
 description = toml.load("pyproject.toml")["project"]["description"]
-
+print(sys.argv)
 occ_libs = [
     "TKG3d",
     "TKTopAlgo",
@@ -33,8 +35,31 @@ extra_compile_args = []
 extra_link_args = []
 
 if platform.system() == "Linux":
-    include_dirs = [str(occt_sdk / "include/opencascade")]
-    library_dirs = [str(occt_sdk / "lib")]
+    
+    def get_libs(ocp_path):
+        local_libs = Path("libs")
+        libs_exists = Path.exists(local_libs)
+
+        print(f"Copying libs in {ocp_path}")
+
+        Path.mkdir(local_libs, exist_ok=True)
+
+        libs = []
+        for lib in occ_libs:
+            target = f"lib{lib}.so"
+            so_lib = next(Path.glob(ocp_path, f"lib{lib}*.so.*"))
+            lib_name = so_lib.name[3:].split("-")[0]
+            if not libs_exists:
+                print("  - ", so_lib, "==>", target)
+                shutil.copy(so_lib, f"./libs/lib{lib_name}.so")
+            libs.append(lib_name)
+
+        return libs
+
+    ocp_path = site_pkgs / "cadquery_ocp.libs"
+    print("ocp_path", str(ocp_path))
+    include_dirs = [str(occt_sdk)]
+    library_dirs = ["./libs"]
     extra_compile_args.extend(["-O3", "-Wno-deprecated-declarations"])
 
 elif platform.system() == "Darwin":
