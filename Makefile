@@ -51,7 +51,7 @@ wheel-macos: clean
 
 wheel-linux: clean
 	pip install patchelf
-	python -m build -n -w
+	CXX=g++-9 python -m build -n -w
 	python -m wheel unpack dist/*.whl
 	python fix_libs.py
 	python -m wheel pack ocp_addons-$(VERSION)
