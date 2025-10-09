@@ -1,12 +1,14 @@
 import os
 import platform
+import site
+import toml
 from pathlib import Path
 
 from pybind11.setup_helpers import Pybind11Extension, build_ext
 from setuptools import setup
 
-__version__ = "0.1.4"
-description = "Addon packages for OCP"
+version = toml.load("pyproject.toml")["project"]["version"]
+description = toml.load("pyproject.toml")["project"]["description"]
 
 occ_libs = [
     "TKG3d",
@@ -21,9 +23,11 @@ occ_libs = [
     "TKernel",
 ]
 
-here = Path(__file__).resolve().parent
+occt_sdk = Path(os.environ["CONDA_PREFIX"]) / "include" / "opencascade"
+print("OCCT includes:", str(occt_sdk))
 
-occt_sdk = Path(os.environ.get("OCCT_SDK", here / "occt"))
+site_pkgs = Path(site.getsitepackages()[0])
+print("Site-packages:", str(site_pkgs))
 
 extra_compile_args = []
 extra_link_args = []
@@ -34,8 +38,20 @@ if platform.system() == "Linux":
     extra_compile_args.extend(["-O3", "-Wno-deprecated-declarations"])
 
 elif platform.system() == "Darwin":
-    include_dirs = [str(occt_sdk / "include/opencascade")]
-    library_dirs = [str(occt_sdk / "lib")]
+
+    def get_libs(ocp_path):
+        print(f"Finding libs in {ocp_path}")
+        libs = []
+        for lib in occ_libs:
+            dylib = next(Path.glob(ocp_path, f"lib{lib}*.dylib"))
+            lib_name = dylib.name[3:].replace(".dylib", "")
+            libs.append(lib_name)
+        return libs
+
+    ocp_path = site_pkgs / "OCP" / ".dylibs"
+    print("ocp_path", str(ocp_path))
+    include_dirs = [str(occt_sdk)]
+    library_dirs = [str(ocp_path)]
 
     extra_compile_args.extend([
         "-O3",
@@ -56,12 +72,7 @@ elif platform.system() == "Windows":
 else:
     raise RuntimeError(f"Platform {platform.system()} is not supported")
 
-# Do not print outside ensure "python setup.py --version" works correctly
-if os.environ.get("DEBUG_SETUP_PY") is not None:
-    print("setup.py: include_dirs", include_dirs)
-    print("setup.py: library_dirs", library_dirs)
-    print("setup.py: extra_compile_args", extra_compile_args)
-    print("setup.py: extra_link_args", extra_link_args)
+local_occ_libs = get_libs(ocp_path)
 
 ext_modules = [
     Pybind11Extension(
@@ -73,30 +84,19 @@ ext_modules = [
             "src/serializer/main.cpp",
         ],
         define_macros=[
-            ("VERSION_INFO", __version__),
+            ("VERSION_INFO", version),
             ("DESCRIPTION", description),
         ],
         include_dirs=include_dirs,
         library_dirs=library_dirs,
-        libraries=occ_libs,
+        libraries=local_occ_libs,
         extra_compile_args=extra_compile_args,
         extra_link_args=extra_link_args,
         cxx_std=17,
     ),
 ]
 
-
 setup(
-    name="ocp_addons",
-    version=__version__,
-    author="J Degenstein, Matthias J, Bernhard Walter",
-    author_email="",
-    url="https://github.com/jdegenstein/ocp-addons.git",
-    description=description,
-    long_description="",
     ext_modules=ext_modules,
-    extras_require={"test": "pytest"},
     cmdclass={"build_ext": build_ext},
-    zip_safe=False,
-    python_requires=">=3.11",
 )
