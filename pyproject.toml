@@ -1,0 +1,25 @@
+[build-system]
+requires = ["setuptools>=80", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ocp_addons"
+version = "0.1.7"
+description = "Addon packages for OCP"
+readme = "README.md"
+authors = [
+    { name = "J Degenstein" },
+    { name = "Matthias J" },
+    { name = "Bernhard Walter" },
+]
+dependencies = ["cadquery_ocp==7.8.1.1.post1"]
+requires-python = ">=3.10"
+
+[project.urls]
+Homepage = "https://github.com/jdegenstein/ocp-addons.git"
+
+[project.optional-dependencies]
+test = ["pytest"]
+
+[tool.setuptools.packages.find]
+exclude = ["src*"]
