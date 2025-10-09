@@ -131,5 +131,5 @@ struct MeshData
  * @param timeit Enable timing measurements for performance analysis
  * @return MeshData structure containing all tessellated geometry
  */
-MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolerance,
+MeshData tessellate(py::object obj, double deflection, double angular_tolerance,
                     bool compute_faces, bool compute_edges, bool parallel, int debug, bool timeit);

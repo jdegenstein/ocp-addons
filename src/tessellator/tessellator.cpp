@@ -291,12 +291,15 @@ MeshData collect_mesh_data(
  *          should be handled by the MeshData structure or calling code.
  */
 
-MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolerance,
+MeshData tessellate(py::object obj, double deflection, double angular_tolerance,
                     bool compute_faces, bool compute_edges, bool parallel, int debug, bool timeit)
 {
     /*
      * Tessellate mesh
      */
+
+    auto *shape_ptr = obj.cast<TopoDS_Shape *>();
+    const TopoDS_Shape &shape = *shape_ptr;
 
     Logger logger(debug);
     Timer overall("Overall", 0, timeit);
@@ -343,10 +346,6 @@ MeshData tessellate(TopoDS_Shape shape, double deflection, double angular_tolera
             for (int i = 0; i < num_faces; i++)
             {
                 const TopoDS_Face &topods_face = TopoDS::Face(face_map.FindKey(i + 1));
-
-                PrintCheckStatuses(topods_face, i);
-                std::string filename = "face" + std::to_string(i) + ".occ";
-                BRepTools::Write(topods_face, filename.c_str());
 
                 TopAbs_Orientation orient = topods_face.Orientation();
                 Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation(topods_face, loc);
