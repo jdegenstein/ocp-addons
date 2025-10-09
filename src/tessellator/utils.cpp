@@ -32,7 +32,8 @@ void Timer::stop() const
 
 void Timer::reset(const std::string &message, int level)
 {
-    output();
+    if (timeit_)
+        output();
     message_ = message;
     level_ = level;
     start_ = std::chrono::high_resolution_clock::now();
