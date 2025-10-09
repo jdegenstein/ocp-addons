@@ -1,0 +1,16 @@
+name: build-ocp-addons
+channels:
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pybind11==2.13.*
+  - occt=7.8.*
+  - pip
+  - pip:
+    - build
+    - setuptools>=80
+    - wheel
+    - toml
+    - cadquery_ocp==7.8.*
+
+  
