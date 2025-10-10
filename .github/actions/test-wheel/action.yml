@@ -98,14 +98,3 @@ runs:
 
         # micromamba run -n test-ocp-addons pip install build123d        
         # micromamba run -n test-ocp-addons pytest -v
-
-    # - - -
-
-    - name: Uninstall test
-      shell:  bash -leo pipefail {0}
-      run: |
-        # Uninstall test
-
-        pip uninstall ocp_addons
-
-        pip list
