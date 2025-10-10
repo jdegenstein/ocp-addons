@@ -44,7 +44,7 @@ runs:
       run: |
         # Prepare environment-test.yml
 
-        sed -i 's/python=3\.1[0-9]/${{ inputs.python-version }}/' environment-test.yml
+        sed -i 's/python=3\.1[0-9]/python=${{ inputs.python-version }}/' environment-test.yml
 
         cat environment-test.yml
 
