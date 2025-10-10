@@ -23,9 +23,10 @@ wheel-linux: clean
 wheel-windows: SHELL:=cmd.exe
 wheel-windows: .SHELLFLAGS:=/C
 wheel-windows: clean-windows
-	dir "C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe"
-	"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath
-	for /f "usebackq delims=" %%i in (`"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath`) do call "%%i\..\BuildTools\VC\Auxiliary\Build\vcvars64.bat" && ^\
+	rem For local builds
+	rem for /f "usebackq delims=" %%i in (`"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath`) do call "%%i\..\BuildTools\VC\Auxiliary\Build\vcvars64.bat" && ^\
+	
+	call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.29 && ^\
 	set CXX=cl.exe && ^\
 	python -m build -n -w
 	mkdir wheelhouse
