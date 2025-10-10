@@ -49,6 +49,10 @@ sudo apt install gcc-9 g++-9
 
 ### Build ocp-addons
 
+Edit `pyproject.toml` and change dependencies = `["cadquery_ocp==7.8.1.1.post1"]` under `[project]` to the version you want to build `ocp-addons` for
+
+Then
+
 - Linux (x86_64): `make wheel-linux`
 - MacOS (Apple Silicon): `make wheel-macos`
 - Windows (Intel): `make wheel-windows`
