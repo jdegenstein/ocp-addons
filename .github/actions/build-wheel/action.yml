@@ -10,6 +10,9 @@ inputs:
   shells:
     description: "Shell configuration for the OS"
     required: true
+  wheel-version:
+    description: "Version of the wheel to build"
+    required: true
 
 
 runs:
@@ -19,8 +22,17 @@ runs:
     
     # - - -
 
+    - name: Restore wheel
+      id: cache-wheel-restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ github.workspace }}/ocp-addons/wheelhouse/
+        key: ocp-addons-${{ inputs.wheel-version }}-wheel-${{ inputs.os }}-cp${{ inputs.python-version }}-
+    
+    # - - -
+
     - name: Install Linux Dependencies (x86_64)
-      if: runner.os == 'Linux'
+      if: runner.os == 'Linux' && steps.cache-wheel-restore.outputs.cache-hit != 'true'
       shell: bash -leo pipefail {0}
       run: |
         # Install Linux Dependencies (x86_64)
@@ -33,7 +45,7 @@ runs:
     # - - -
 
     - name: Install MacOS Dependencies (x86_64 / arm64)
-      if: runner.os == 'macOS'
+      if: runner.os == 'macOS' && steps.cache-wheel-restore.outputs.cache-hit != 'true'
       shell: bash -leo pipefail {0}
       run: |
         # Install MacOS Dependencies (x86_64 / arm64)
@@ -45,6 +57,7 @@ runs:
     # - - -
     
     - name: Prepare environment.yml
+      if: steps.cache-wheel-restore.outputs.cache-hit != 'true'
       shell: bash -leo pipefail {0}
       run: |
         # Prepare environment.yml
@@ -56,6 +69,7 @@ runs:
     # - - -
     
     - name: Set up Python ${{ inputs.python-version }} via micromamba
+      if: steps.cache-wheel-restore.outputs.cache-hit != 'true'
       uses: mamba-org/setup-micromamba@v2
       with:
         environment-file: environment.yml
@@ -68,7 +82,7 @@ runs:
     # - - -
 
     - name: Build wheel on Windows
-      if: runner.os == 'Windows'
+      if: runner.os == 'Windows' && steps.cache-wheel-restore.outputs.cache-hit != 'true'
       shell: cmd
       run: |
         rem Build wheel on Windows
@@ -79,7 +93,7 @@ runs:
     # - - -
 
     - name: Build wheel on MacOS, Linux
-      if: runner.os != 'Windows'
+      if: runner.os != 'Windows' && steps.cache-wheel-restore.outputs.cache-hit != 'true'
       shell: bash -leo pipefail {0}
       run: |
         # Build wheel on MacOS, Linux
@@ -93,26 +107,19 @@ runs:
 
     # - - -
 
-    - name: Extract version from pyproject.toml
-      id: get_version
-      shell: bash -leo pipefail {0}      
-      run: |
-        # Extract version from pyproject.toml
-        
-        if [[ ${{ inputs.python-version }} == "3.10" ]]; then
-          pip install tomli
-          VERSION=$(python -c "import tomli; print(tomli.load(open('pyproject.toml', 'rb'))['project']['version'])")
-        else
-          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
-        fi
-        echo "version=$VERSION" >> $GITHUB_OUTPUT
+    - name: Cache wheel
+      id: cache-wheel-save
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ github.workspace }}/ocp-addons/wheelhouse/*.whl
+        key: ocp-addons-${{ inputs.wheel-version }}-wheel-${{ inputs.os }}-cp${{ inputs.python-version }}-
 
     # - - -
 
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ocp-addons-${{ steps.get_version.outputs.version }}-wheel-${{ inputs.os }}-cp${{ inputs.python-version }}
+        name: ocp-addons-${{ inputs.wheel-version }}-wheel-${{ inputs.os }}-cp${{ inputs.python-version }}
         path: ./wheelhouse/*.whl
 
 
