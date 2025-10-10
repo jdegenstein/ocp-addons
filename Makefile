@@ -2,6 +2,19 @@
 
 VERSION       := $(shell python -c "import toml; print(toml.load('pyproject.toml')['project']['version'])")
 
+ifeq ($(OS),Windows_NT)
+	ifdef GITHUB_ACTIONS
+	    VSWHERE := C:/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe
+	    VS_PATH := $(shell "$(VSWHERE)" -latest -property installationPath)
+	else
+	    VSWHERE := C:/Program Files (x86)/Microsoft Visual Studio/Installer/vswhere.exe
+	    VS_PATH := $(shell "$(VSWHERE)" -latest -property installationPath)
+	endif
+	
+	VCVARSALL := $(VS_PATH)/VC/Auxiliary/Build/vcvarsall.bat
+endif
+
+
 wheel-macos: clean
 	CXX=clang++ python -m build -n -w
 	python -m wheel unpack dist/*.whl
@@ -26,9 +39,12 @@ wheel-windows: clean-windows
 	rem For local builds
 	rem for /f "usebackq delims=" %%i in (`"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath`) do call "%%i\..\BuildTools\VC\Auxiliary\Build\vcvars64.bat" && ^\
 	
+	echo "VCVARSALL: $(VCVARSALL)"
 	"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe"
 	dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
-	dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\Tools\MSVC"
+	dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\"
+	dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools"
+	dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC"
 
 	call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.29 && ^\
 	set CXX=cl.exe && ^\
