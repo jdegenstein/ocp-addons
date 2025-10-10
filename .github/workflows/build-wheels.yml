@@ -57,7 +57,7 @@ jobs:
 
             - name: Build SDKs
               id: build-ocp-addons
-              uses: ./.github/actions/build
+              uses: ./.github/actions/build-wheel
               with:
                   os: ${{ matrix.os }}
                   python-version: ${{ matrix.python-version }}
@@ -79,7 +79,7 @@ jobs:
             - uses: actions/checkout@v4
             - name: Test OCP
               id: test-ocp
-              uses: ./.github/actions/test
+              uses: ./.github/actions/test-wheel
               with:
                   os: ${{ matrix.os }}
                   python-version: ${{ matrix.python-version }}
