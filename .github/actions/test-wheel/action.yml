@@ -79,7 +79,6 @@ runs:
 
         pip install ocp_addons-*.whl
         pip list
-        pip install build123d
 
         python -c "import OCP; print('Success: OCP', OCP.__version__)"
         python -c "import ocp_addons; print('Success; ocp-addons serializer: OCP', ocp_addons.serializer._test())"
@@ -94,6 +93,8 @@ runs:
         echo "$CONDA_PREFIX"
         
         pip install build123d
+        pip list
+        
         pytest -v
 
         # micromamba run -n test-ocp-addons pip install build123d        
