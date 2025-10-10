@@ -73,13 +73,13 @@ runs:
       run: |
         rem Build wheel on Windows
         
-        make wheel-windows
+        micromamba run -n build-ocp-addons make wheel-windows
 
     # - - -
 
     - name: Build wheel on MacOS, Linux
       if: runner.os != 'Windows'
-      shell: bash
+      shell: bash -leo pipefail {0}
       run: |
         rem Build wheel on MacOS, Linux
         
