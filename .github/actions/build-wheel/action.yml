@@ -75,7 +75,7 @@ runs:
         
         micromamba run -n build-ocp-addons make wheel-windows
         dir wheelhouse
-        
+
     # - - -
 
     - name: Build wheel on MacOS, Linux
@@ -97,7 +97,7 @@ runs:
       uses: actions/upload-artifact@v4
       with:
         name: ocp-addons-wheel-${{ inputs.os }}-cp${{ inputs.python-version }}
-        path: ocp-addons/wheelhouse/*.whl
+        path: ./wheelhouse/*.whl
 
 
 
