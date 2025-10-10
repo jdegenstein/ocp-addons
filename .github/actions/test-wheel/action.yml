@@ -58,7 +58,7 @@ runs:
         environment-file: environment-test.yml
         log-level: warning
         init-shell: ${{ inputs.shells }}
-        cache-downloads: true        
+        # cache-downloads: true        
         cache-environment: true
         cache-environment-key: environment-test-${{ inputs.python-version }}-${{ inputs.os }}
 
