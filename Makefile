@@ -40,13 +40,7 @@ wheel-windows: clean-windows
 	rem for /f "usebackq delims=" %%i in (`"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe" -latest -property installationPath`) do call "%%i\..\BuildTools\VC\Auxiliary\Build\vcvars64.bat" && ^\
 	
 	echo "VCVARSALL: $(VCVARSALL)"
-	"C:\Program Files (x86)\Microsoft Visual Studio\Installer\vswhere.exe"
-	dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise"
-	dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\"
-	dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools"
-	dir "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Tools\MSVC"
-
-	call "C:\Program Files\Microsoft Visual Studio\2022\Enterprise\VC\Auxiliary\Build\vcvarsall.bat" x64 -vcvars_ver=14.29 && ^\
+	call "$(VCVARSALL)" x64 -vcvars_ver=14.29 && ^\
 	set CXX=cl.exe && ^\
 	python -m build -n -w
 	mkdir wheelhouse
