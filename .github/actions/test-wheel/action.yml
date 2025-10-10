@@ -76,7 +76,7 @@ runs:
       run: |
         # Install OCP addons wheel
         
-        pip install ocp-addons/wheelhouse/*.whl
+        pip install ocp-addons-*.whl
         pip list
         pip install build123d
 
