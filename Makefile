@@ -1,5 +1,7 @@
 .PHONY:  clean clean-windows wheel-linux wheel-macos wheel-windows
 
+VERSION       := $(shell python -c "import toml; print(toml.load('pyproject.toml')['project']['version'])")
+
 wheel-macos: clean
 	CXX=clang++ python -m build -n -w
 	python -m wheel unpack dist/*.whl
@@ -28,7 +30,7 @@ wheel-windows: clean-windows
 	copy dist\ocp_addons-$(VERSION)*.whl wheelhouse
 
 clean:
-	rm -fr ocp_addons.egg-info build dist wheelhouse libs ocp_addons-$(VERSION)
+	rm -fr ocp_addons.egg-info build dist wheelhouse libs ocp_addons-$(VERSION) test
 
 clean-windows:
-	rmdir /S /Q ocp_addons.egg-info build dist wheelhouse libs ocp_addons-$(VERSION)  2> NUL || exit 0
+	rmdir /S /Q ocp_addons.egg-info build dist wheelhouse libs ocp_addons-$(VERSION) test  2> NUL || exit 0
