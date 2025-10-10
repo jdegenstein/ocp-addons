@@ -112,7 +112,7 @@ runs:
       uses: actions/cache/save@v4
       with:
         path: ${{ github.workspace }}/wheelhouse/*.whl
-        key: ocp-addons-${{ inputs.wheel-version }}-wheel-${{ inputs.os }}-cp${{ inputs.python-version }}-
+        key: ${{ steps.cache-wheel-restore.outputs.cache-primary-key }}
 
     # - - -
 
