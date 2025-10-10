@@ -4,6 +4,7 @@ import os
 import sys
 import tempfile
 from time import time
+from pathlib import Path
 
 try:
     import cadquery as cq
@@ -81,44 +82,66 @@ def tess(obj, deflection, angular_tolerance, parallel):
     }
 
 
-test_case = 2
+print("test serializer:", serializer._test())
+print("test serializer OCCT shape:", serializer._testOCCT())
 
-if test_case == 0:
-    # file, acc, show = "examples/b123.brep", 0.002, True
-    file, acc, show = "examples/rc.brep", 0.19, False
+for test_case in [0, 1, 2, 3]:
 
-    with open(file, "rb") as f:
-        obj = deserialize(f.read())
-elif test_case == 1:
-    if CQ:
-        obj, acc, show = cq.Workplane().box(1, 2, 3).val().wrapped, 0.002, True
-    elif BD:
-        obj, acc, show = bd.Box(1, 2, 3).wrapped, 0.002, True
-elif test_case == 2:
-    if BD:
-        box = bd.Box(1, 2, 3)
-        # box = bd.fillet(box.edges(), 0.3)
-        bd.export_stl(box, "box.stl")
-        box2 = bd.import_stl("box.stl")
-        obj, acc, show = box2.wrapped, 0.002, True
-    elif CQ:
-        exit(1)
+    show_results = True
+    
+    if test_case == 0:
+        print("1 Simple box deserialized")
+        file = Path("examples") / "b123.brep"
+        acc = 0.002
+        show_results = True
+
+        with open(file, "rb") as f:
+            obj = deserialize(f.read())
+    elif test_case == 1:
+        print("2 Large RC object")
+        file = "examples/rc.brep"
+        acc = 0.19
+        show_results = False
+
+        with open(file, "rb") as f:
+            obj = deserialize(f.read())
+    elif test_case == 2:
+        print("3 Simple box built locally")
+        if CQ:
+            wp = cq.Workplane()
+            box = wp.box(1, 2, 3).val()
+            obj, acc = box.wrapped, 0.002
+        elif BD:
+            box = bd.Box(1, 2, 3)
+            obj = box.wrapped
+            acc = 0.002
+    elif test_case == 3:
+        print("4 Box imported from STL")
+        if BD:
+            box = bd.fillet(box.edges(), 0.3)
+            bd.export_stl(box, "box.stl")
+            box2 = bd.import_stl("box.stl")
+            obj = box2.wrapped
+            acc = 0.002
+        elif CQ:
+            exit(1)
 
 
-tt = time()
+    tt = time()
 
-mesh = tess(obj, acc, 0.3, parallel=True)
+    mesh = tess(obj, acc, 0.3, parallel=True)
 
 
-if show:
-    print("vertices:", mesh["vertices"])
-    print("normals:", mesh["normals"])
-    print("triangles:", mesh["triangles"])
-    print("face_types:", mesh["face_types"])
-    print("edge_types:", mesh["edge_types"])
-    print("edges:", mesh["edges"])
-    print("obj_vertices:", mesh["obj_vertices"])
-    print("test serializer:", serializer._test())
-    print("test serializer OCCT shape:", serializer._testOCCT())
+    if show_results:
+        print("vertices:", mesh["vertices"])
+        print("normals:", mesh["normals"])
+        print("triangles:", mesh["triangles"])
+        print("face_types:", mesh["face_types"])
+        print("edge_types:", mesh["edge_types"])
+        print("edges:", mesh["edges"])
+        print("obj_vertices:", mesh["obj_vertices"])
 
-print("overall:", int(1000 * (time() - tt)), "ms")
+    print("overall:", int(1000 * (time() - tt)), "ms")
+
+
+
