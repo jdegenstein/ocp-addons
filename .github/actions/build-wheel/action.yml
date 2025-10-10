@@ -74,7 +74,8 @@ runs:
         rem Build wheel on Windows
         
         micromamba run -n build-ocp-addons make wheel-windows
-
+        dir wheelhouse
+        
     # - - -
 
     - name: Build wheel on MacOS, Linux
@@ -88,6 +89,7 @@ runs:
         else
           make wheel-linux
         fi
+        ls -l wheelhouse
 
     # - - -
 
