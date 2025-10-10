@@ -7,7 +7,7 @@ from pathlib import Path
 
 
 def execute(cmd):
-    result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=False)
+    result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)
     print(result.stderr)
     return result.stdout
 
@@ -17,27 +17,21 @@ if platform.system() == "Linux":
     so_libs = Path(site.getsitepackages()[0]) / "cadquery_ocp.libs"
 
     # Change the runpath to point to the OCP packages dynamic libs folder
-    execute(
-        f"patchelf --set-rpath '$ORIGIN/cadquery_ocp.libs' {so_file}"
-    )
+    execute(f"patchelf --set-rpath '$ORIGIN/cadquery_ocp.libs' {so_file}")
     dump = execute(f"readelf -d {so_file}").split("\n")
 
     libs = [
-        re.search(r"\[([^\]]+)\]", line).group(1)
-        for line in dump
-        if "libTK" in line
+        re.search(r"\[([^\]]+)\]", line).group(1) for line in dump if "libTK" in line
     ]
     for lib in libs:
         print("so_libs", so_libs)
         print("lib", lib)
-        ocp_lib = next(Path.glob(so_libs, f"{lib.split(".")[0]}*")).name
+        ocp_lib = next(Path.glob(so_libs, f"{lib.split('.')[0]}*")).name
 
         print(" -", lib, "==>", ocp_lib)
 
         # Change the neede libs to have the same version numbers as in the OCP package
-        execute(
-            f"patchelf --replace-needed {lib} {ocp_lib} {so_file}"
-        )
+        execute(f"patchelf --replace-needed {lib} {ocp_lib} {so_file}")
 
 elif platform.system() == "Darwin":
     so_file = next(Path.glob(Path.cwd(), "ocp_addons-*/ocp_addons.cpython-*.so"))
@@ -48,7 +42,12 @@ elif platform.system() == "Darwin":
     )
 
     # Delete CONDA rpath
-    execute(f"install_name_tool -delete_rpath {os.environ['CONDA_PREFIX']}/lib {so_file}")
+    execute(
+        f"install_name_tool -delete_rpath {os.environ['CONDA_PREFIX']}/lib {so_file}"
+    )
+
+    # Add vtk rpath
+    execute(f"install_name_tool -add_rpath @loader_path/vtkmodules/.dylibs/ {so_file}")
 
     dump = execute(f"otool -L {so_file}").split("\n")
 
