@@ -30,7 +30,7 @@ jobs:
 
             - name: Build SDKs
               id: build-ocp-addons
-              uses: ./.github/actions/build
+              uses: ./.github/actions/build-wheel
               with:
                   os: ${{ matrix.os }}
                   python-version: ${{ matrix.python-version }}
