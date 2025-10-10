@@ -1,0 +1,97 @@
+name: "Build OCP addons"
+description: "Build OCP Addons"
+inputs:
+  os:
+    description: "Operating system to use for the build"
+    required: true
+  python-version:
+    description: "Python version to use for the build"
+    required: true
+  shells:
+    description: "Shell configuration for the OS"
+    required: true
+
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v4
+    
+    # - - -
+
+    - name: Install Linux Dependencies (x86_64)
+      if: runner.os == 'Linux'
+      shell: bash -leo pipefail {0}
+      run: |
+        # Install Linux Dependencies (x86_64)
+
+        apt-get update -qq
+        # apt-get install -qq -y freetype* libfreetype6-dev libgl1-mesa-glx git \
+        #                        ca-certificates patch gcc-9 g++-9 build-essential  > /dev/null 2>&1
+        apt-get install -qq -y git ca-certificates patch gcc-9 g++-9 build-essential  > /dev/null 2>&1
+
+    # - - -
+
+    - name: Install MacOS Dependencies (x86_64 / arm64)
+      if: runner.os == 'macOS'
+      shell: bash -leo pipefail {0}
+      run: |
+        # Install MacOS Dependencies (x86_64 / arm64)
+
+        brew install gsed
+        # ensure gnu sed is in PATH before system (BSD) sed
+        sudo ln -s "$(brew --prefix gnu-sed)/libexec/gnubin/sed" /usr/local/bin/sed
+
+    # - - -
+    
+    - name: Prepare environment.yml
+      shell: bash -leo pipefail {0}
+      run: |
+        # Prepare environment.yml
+
+        sed -i 's/python=3\.1[0-9]/${{ inputs.python-version }}/' environment.yml
+
+        cat environment.yml
+
+    # - - -
+    
+    - name: Set up Python ${{ inputs.python-version }} via micromamba
+      uses: mamba-org/setup-micromamba@v2
+      with:
+        environment-file: environment.yml
+        log-level: warning
+        init-shell: ${{ inputs.shells }}
+        cache-downloads: true        
+        cache-environment: true
+        cache-environment-key: environment-${{ inputs.python-version }}-${{ inputs.os }}
+
+    # - - -
+
+    - name: Build wheel on Windows
+      if: runner.os == 'Windows'
+      shell: cmd
+      run: |
+        rem Build wheel on Windows
+        
+        make wheel-windows
+
+    # - - -
+
+    - name: Build wheel on MacOS, Linux
+      if: runner.os != 'Windows'
+      shell: bash
+      run: |
+        rem Build wheel on MacOS, Linux
+        
+        make wheel-windows
+
+    # - - -
+
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v4
+      with:
+        name: ocp-addons-wheel-${{ inputs.os }}-cp${{ inputs.python-version }}
+        path: ocp-addons/wheelhouse/*.whl
+
+
+

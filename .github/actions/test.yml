@@ -1,0 +1,102 @@
+name: "Test OCP addons"
+description: "Testing OCP addons wheels with build123d and CadQuery"
+inputs:
+  os:
+    description: "Operating system to use for the build"
+    required: true
+  python-version:
+    description: "Python version to use for the build"
+    required: true
+
+
+runs:
+  using: "composite"
+  steps:
+    - uses: actions/checkout@v4
+    
+    # - - -
+
+    - name: (Linux) Install ca-certificates
+      shell: bash -l {0}
+      run: |
+        # (Linux) Install ca-certificates
+        set -e
+        set -u
+        set -o pipefail
+
+        sudo apt-get update -qq  
+        sudo DEBIAN_FRONTEND=noninteractive apt-get install -qq ca-certificates > /dev/null 2>&1
+
+   # - - -
+
+    - name: Install MacOS Dependencies (x86_64 / arm64)
+      if: runner.os == 'macOS'
+      shell: bash -leo pipefail {0}
+      run: |
+        # Install MacOS Dependencies (x86_64 / arm64)
+
+        brew install gsed
+        # ensure gnu sed is in PATH before system (BSD) sed
+        sudo ln -s "$(brew --prefix gnu-sed)/libexec/gnubin/sed" /usr/local/bin/sed
+
+    # - - -
+    
+    - name: Prepare environment-test.yml
+      shell: bash -leo pipefail {0}
+      run: |
+        # Prepare environment-test.yml
+
+        sed -i 's/python=3\.1[0-9]/${{ inputs.python-version }}/' environment-test.yml
+
+        cat environment-test.yml
+
+    # - - -
+    
+    - name: Set up Python ${{ inputs.python-version }} via micromamba
+      uses: mamba-org/setup-micromamba@v2
+      with:
+        environment-file: environment-test.yml
+        log-level: warning
+        init-shell: ${{ inputs.shells }}
+        cache-downloads: true        
+        cache-environment: true
+        cache-environment-key: environment-test-${{ inputs.python-version }}-${{ inputs.os }}
+
+    # - - -
+    
+    - name: Install OCP addons wheel
+      shell: bash -leo pipefail {0}
+      run: |
+        # Install OCP addons wheel
+        
+        pip install ocp-addons/wheelhouse/*.whl
+        pip list
+        pip install build123d
+
+        python -c "import OCP; print('Success: OCP', OCP.__version__)"
+        python -c "import ocp_addons; print('Success; ocp-addons serializer: OCP', ocp_addons.serializer._test())"
+
+    # - - -
+
+    - name: Run build123d tests
+      shell: bash -leo pipefail {0}
+      run: |
+        # Run build123d tests
+
+        micromamba activate test
+        pip install build123d
+
+        cd ocp-addons
+        
+        pytest -v
+
+    # - - -
+
+    - name: Uninstall test
+      shell:  bash -leo pipefail {0}
+      run: |
+        # Uninstall test
+
+        pip uninstall ocp_addons
+
+        pip list
