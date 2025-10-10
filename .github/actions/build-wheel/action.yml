@@ -111,7 +111,7 @@ runs:
       id: cache-wheel-save
       uses: actions/cache/save@v4
       with:
-        path: ${{ github.workspace }}/wheelhouse/*.whl
+        path: ${{ github.workspace }}/wheelhouse/
         key: ${{ steps.cache-wheel-restore.outputs.cache-primary-key }}
 
     # - - -
