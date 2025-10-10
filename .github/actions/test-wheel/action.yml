@@ -18,15 +18,6 @@ runs:
 
     # - - -
 
-    - name: Restore wheel
-      id: cache-wheel-restore
-      uses: actions/cache/restore@v4
-      with:
-        path: ${{ github.workspace }}/wheelhouse/
-        key: ocp-addons-${{ inputs.wheel-version }}-wheel-${{ inputs.os }}-cp${{ inputs.python-version }}-
-            
-    # - - -
-
     - name: (Linux) Install ca-certificates
       if: runner.os == 'Linux'
       shell: bash -leo pipefail {0}
@@ -70,6 +61,13 @@ runs:
         cache-downloads: true        
         cache-environment: true
         cache-environment-key: environment-test-${{ inputs.python-version }}-${{ inputs.os }}
+
+    # - - -
+
+    - name: Download ocp-addons wheel
+      uses: actions/download-artifact@v4
+      with:
+        name: ocp-addons-${{ inputs.wheel-version }}-wheel-${{ inputs.os }}-cp${{ inputs.python-version }}
 
     # - - -
     
