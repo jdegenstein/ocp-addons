@@ -86,11 +86,10 @@ print("test serializer:", serializer._test())
 print("test serializer OCCT shape:", serializer._testOCCT())
 
 for test_case in [0, 1, 2, 3]:
-
     show_results = True
-    
+
     if test_case == 0:
-        print("1 Simple box deserialized")
+        print("\n\n1 Simple box deserialized")
         file = Path("examples") / "b123.brep"
         acc = 0.002
         show_results = True
@@ -98,7 +97,7 @@ for test_case in [0, 1, 2, 3]:
         with open(file, "rb") as f:
             obj = deserialize(f.read())
     elif test_case == 1:
-        print("2 Large RC object")
+        print("\n\n2 Large RC object")
         file = "examples/rc.brep"
         acc = 0.19
         show_results = False
@@ -106,7 +105,7 @@ for test_case in [0, 1, 2, 3]:
         with open(file, "rb") as f:
             obj = deserialize(f.read())
     elif test_case == 2:
-        print("3 Simple box built locally")
+        print("\n\n3 Simple box built locally")
         if CQ:
             wp = cq.Workplane()
             box = wp.box(1, 2, 3).val()
@@ -116,7 +115,7 @@ for test_case in [0, 1, 2, 3]:
             obj = box.wrapped
             acc = 0.002
     elif test_case == 3:
-        print("4 Box imported from STL")
+        print("\n\n4 Box imported from STL")
         if BD:
             box = bd.fillet(box.edges(), 0.3)
             bd.export_stl(box, "box.stl")
@@ -126,11 +125,9 @@ for test_case in [0, 1, 2, 3]:
         elif CQ:
             exit(1)
 
-
     tt = time()
 
     mesh = tess(obj, acc, 0.3, parallel=True)
-
 
     if show_results:
         print("vertices:", mesh["vertices"])
@@ -142,6 +139,3 @@ for test_case in [0, 1, 2, 3]:
         print("obj_vertices:", mesh["obj_vertices"])
 
     print("overall:", int(1000 * (time() - tt)), "ms")
-
-
-
