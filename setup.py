@@ -44,11 +44,20 @@ def tool_path(tool_name):
             prefix = Path(line.split(": ")[1].strip()).parent
             return (
                 prefix
-                / "BuildTools"
+                # / "BuildTools"
+                # / "VC"
+                # / "Tools"
+                # / "MSVC"
+                # / "14.29.30133"
+                # / "bin"
+                # / "Hostx64"
+                # / "x64"
+                # / tool_name
+                / "Enterprise"
                 / "VC"
                 / "Tools"
                 / "MSVC"
-                / "14.29.30133"
+                / "14.44.35207"
                 / "bin"
                 / "Hostx64"
                 / "x64"
