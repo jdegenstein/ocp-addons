@@ -7,13 +7,24 @@ inputs:
   python-version:
     description: "Python version to use for the build"
     required: true
-
+  wheel-version:
+    description: "Version of the wheel to build"
+    required: true
 
 runs:
   using: "composite"
   steps:
     - uses: actions/checkout@v4
-    
+
+    # - - -
+
+    - name: Restore wheel
+      id: cache-wheel-restore
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ github.workspace }}/wheelhouse/
+        key: ocp-addons-${{ inputs.wheel-version }}-wheel-${{ inputs.os }}-cp${{ inputs.python-version }}-
+            
     # - - -
 
     - name: (Linux) Install ca-certificates

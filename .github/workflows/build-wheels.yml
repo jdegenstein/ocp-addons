@@ -88,9 +88,18 @@ jobs:
 
         steps:
             - uses: actions/checkout@v4
+
+            - name: Extract version from pyproject.toml
+              id: get_version
+              uses: SebRollen/toml-action@v1.2.0
+              with:
+                  file: "pyproject.toml"
+                  field: "project.version"
+
             - name: Test OCP
               id: test-ocp
               uses: ./.github/actions/test-wheel
               with:
                   os: ${{ matrix.os }}
                   python-version: ${{ matrix.python-version }}
+                  wheel-version: ${{ steps.get_version.outputs.value }}
