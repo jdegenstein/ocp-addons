@@ -58,7 +58,6 @@ runs:
         environment-file: environment-test.yml
         log-level: warning
         init-shell: ${{ inputs.shells }}
-        # cache-downloads: true        
         cache-environment: true
         cache-environment-key: environment-test-${{ inputs.python-version }}-${{ inputs.os }}
 
@@ -75,9 +74,6 @@ runs:
       shell: bash -leo pipefail {0}
       run: |
         # Install OCP addons wheel
-
-        pwd
-        tree
 
         pip install ocp_addons-*.whl
         pip list
