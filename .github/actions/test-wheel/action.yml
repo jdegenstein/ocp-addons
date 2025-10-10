@@ -35,7 +35,7 @@ runs:
       run: |
         # Install MacOS Dependencies (x86_64 / arm64)
 
-        brew install gsed tree
+        brew install gsed
         # ensure gnu sed is in PATH before system (BSD) sed
         sudo ln -s "$(brew --prefix gnu-sed)/libexec/gnubin/sed" /usr/local/bin/sed
 
@@ -93,12 +93,9 @@ runs:
       run: |
         # Run build123d tests
 
-        micromamba activate test
-        pip install build123d
-
-        cd ocp-addons
+        micromamba run -n test-ocp-addons pip install build123d
         
-        pytest -v
+        micromamba run -n test-ocp-addons pytest -v
 
     # - - -
 
