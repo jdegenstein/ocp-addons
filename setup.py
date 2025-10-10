@@ -195,7 +195,7 @@ if platform.system() == "Linux":
             target = f"lib{lib}.so"
             so_lib = next(Path.glob(lib_path, f"lib{lib}*.so.*"))
             lib_name = so_lib.name[3:].split("-")[0]
-            
+
             if not libs_exists:
                 print("  - ", so_lib, "==>", target)
                 shutil.copy(so_lib, f"./libs/lib{lib_name}.so")
@@ -209,9 +209,11 @@ if platform.system() == "Linux":
     include_dirs = [str(occt_sdk)]
     library_dirs = ["./libs"]
 
-    extra_compile_args.extend(
-        ["-O3", "-Wno-deprecated-declarations", "-D_GLIBCXX_USE_CXX11_ABI=0"]
-    )
+    extra_compile_args.extend([
+        "-O3",
+        "-Wno-deprecated-declarations",
+        "-D_GLIBCXX_USE_CXX11_ABI=0",
+    ])
 
 elif platform.system() == "Darwin":
 
@@ -230,13 +232,11 @@ elif platform.system() == "Darwin":
     include_dirs = [str(occt_sdk)]
     library_dirs = [str(ocp_path)]
 
-    extra_compile_args.extend(
-        [
-            "-O3",
-            "-Wno-deprecated-declarations",
-            "-mmacosx-version-min=11.1",
-        ]
-    )
+    extra_compile_args.extend([
+        "-O3",
+        "-Wno-deprecated-declarations",
+        "-mmacosx-version-min=11.1",
+    ])
     extra_link_args.extend(
         [
             "-Wl,-headerpad_max_install_names",
