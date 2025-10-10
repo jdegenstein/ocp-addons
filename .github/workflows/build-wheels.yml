@@ -96,8 +96,8 @@ jobs:
                   file: "pyproject.toml"
                   field: "project.version"
 
-            - name: Test OCP
-              id: test-ocp
+            - name: Test OCP addons
+              id: test-ocp-addons
               uses: ./.github/actions/test-wheel
               with:
                   os: ${{ matrix.os }}
