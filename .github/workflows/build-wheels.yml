@@ -6,8 +6,8 @@ on:
         branches:
             - new_approach
 
-env:
-    OCP: 7.8.1.1.post1
+# env:
+#     OCP: 7.8.1.1.post1
 #     OCCT: 7.8.1
 #     WHEEL: 7.8.1.0
 
