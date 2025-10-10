@@ -17,12 +17,10 @@ runs:
     # - - -
 
     - name: (Linux) Install ca-certificates
-      shell: bash -l {0}
+      if: runner.os == 'Linux'
+      shell: bash -leo pipefail {0}
       run: |
         # (Linux) Install ca-certificates
-        set -e
-        set -u
-        set -o pipefail
 
         sudo apt-get update -qq  
         sudo DEBIAN_FRONTEND=noninteractive apt-get install -qq ca-certificates > /dev/null 2>&1
