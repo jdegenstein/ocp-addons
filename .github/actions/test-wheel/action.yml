@@ -75,7 +75,10 @@ runs:
       shell: bash -leo pipefail {0}
       run: |
         # Install OCP addons wheel
-        
+
+        pwd
+        tree
+
         pip install ocp-addons-*.whl
         pip list
         pip install build123d
@@ -90,9 +93,6 @@ runs:
       run: |
         # Run build123d tests
 
-        pwd
-        tree
-        
         micromamba activate test
         pip install build123d
 
