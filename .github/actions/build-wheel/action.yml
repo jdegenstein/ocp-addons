@@ -83,7 +83,11 @@ runs:
       run: |
         # Build wheel on MacOS, Linux
         
-        make wheel-windows
+        if [[ "$RUNNER_OS" == "macOS" ]]; then
+          make wheel-macos
+        else
+          make wheel-linux
+        fi
 
     # - - -
 
