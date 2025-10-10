@@ -93,10 +93,26 @@ runs:
 
     # - - -
 
+    - name: Extract version from pyproject.toml
+      id: get_version
+      shell: bash -leo pipefail {0}      
+      run: |
+        # Extract version from pyproject.toml
+        
+        if [[ ${{ inputs.python-version }} == "3.10" ]]; then
+          pip install tomli
+          VERSION=$(python -c "import tomli; print(tomli.load(open('pyproject.toml', 'rb'))['project']['version'])")
+        else
+          VERSION=$(python -c "import tomllib; print(tomllib.load(open('pyproject.toml', 'rb'))['project']['version'])")
+        fi
+        echo "version=$VERSION" >> $GITHUB_OUTPUT
+
+    # - - -
+
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ocp-addons-wheel-${{ inputs.os }}-cp${{ inputs.python-version }}
+        name: ocp-addons-${{ steps.get_version.outputs.version }}-wheel-${{ inputs.os }}-cp${{ inputs.python-version }}
         path: ./wheelhouse/*.whl
 
 
