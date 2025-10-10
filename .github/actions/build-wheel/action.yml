@@ -26,7 +26,7 @@ runs:
       id: cache-wheel-restore
       uses: actions/cache/restore@v4
       with:
-        path: ${{ github.workspace }}/ocp-addons/wheelhouse/
+        path: ${{ github.workspace }}/wheelhouse/
         key: ocp-addons-${{ inputs.wheel-version }}-wheel-${{ inputs.os }}-cp${{ inputs.python-version }}-
     
     # - - -
@@ -111,7 +111,7 @@ runs:
       id: cache-wheel-save
       uses: actions/cache/save@v4
       with:
-        path: ${{ github.workspace }}/ocp-addons/wheelhouse/*.whl
+        path: ${{ github.workspace }}/wheelhouse/*.whl
         key: ocp-addons-${{ inputs.wheel-version }}-wheel-${{ inputs.os }}-cp${{ inputs.python-version }}-
 
     # - - -
