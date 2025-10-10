@@ -74,6 +74,7 @@ def generate_def_file(dll_path, def_path):
         subprocess.CalledProcessError: If the 'dumpbin.exe' command fails.
         OSError: If writing to the DEF file fails.
     """
+    print(f"{tool_path('dumpbin.exe')}")
     result = subprocess.run(
         [f"{tool_path('dumpbin.exe')}", "/EXPORTS", dll_path],
         stdout=subprocess.PIPE,
@@ -123,6 +124,7 @@ def build_import_lib(def_path, lib_path, machine="x64"):
     Raises:
         subprocess.CalledProcessError: If lib.exe fails to execute or returns a non-zero exit code.
     """
+    print(f"{tool_path('lib.exe')}")
     result = subprocess.run(
         [
             f"{tool_path('lib.exe')}",
