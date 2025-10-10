@@ -81,7 +81,7 @@ runs:
       if: runner.os != 'Windows'
       shell: bash -leo pipefail {0}
       run: |
-        rem Build wheel on MacOS, Linux
+        # Build wheel on MacOS, Linux
         
         make wheel-windows
 
