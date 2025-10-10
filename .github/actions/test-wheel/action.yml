@@ -79,7 +79,7 @@ runs:
         pwd
         tree
 
-        pip install ocp-addons-*.whl
+        pip install ocp_addons-*.whl
         pip list
         pip install build123d
 
