@@ -17,7 +17,7 @@ endif
 
 
 wheel-macos: clean
-	CXX=clang++ python -m build -n -w
+	MACOSX_DEPLOYMENT_TARGET=11.0 CXX=clang++ python -m build -n -w
 
 	python -m wheel unpack dist/*.whl
 	cd ocp_addons-$(VERSION) && python ../fix_libs.py $(MODULES) && cd ..
