@@ -22,4 +22,4 @@ Homepage = "https://github.com/jdegenstein/ocp-addons.git"
 test = ["pytest"]
 
 [tool.setuptools.packages.find]
-exclude = ["src*"]
+exclude = ["src*", "tests"]

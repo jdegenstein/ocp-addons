@@ -1,6 +1,7 @@
 .PHONY:  clean clean-windows wheel-linux wheel-macos wheel-windows
 
-VERSION       := $(shell python -c "import toml; print(toml.load('pyproject.toml')['project']['version'])")
+VERSION := $(shell python -c "import toml; print(toml.load('pyproject.toml')['project']['version'])")
+MODULES := tessellator serializer
 
 ifeq ($(OS),Windows_NT)
 	ifdef GITHUB_ACTIONS
@@ -17,19 +18,22 @@ endif
 
 wheel-macos: clean
 	CXX=clang++ python -m build -n -w
+
 	python -m wheel unpack dist/*.whl
-	python fix_libs.py
-	otool -L ocp_addons-$(VERSION)/ocp_addon*.so
+	cd ocp_addons-$(VERSION) && python ../fix_libs.py $(MODULES) && cd ..
 	python -m wheel pack ocp_addons-$(VERSION)
 	mkdir -p wheelhouse
+	
 	mv ocp_addons-$(VERSION)*.whl wheelhouse
 
 wheel-linux: clean
 	pip install patchelf
 	CXX=g++-9 python -m build -n -w
+
 	python -m wheel unpack dist/*.whl
-	python fix_libs.py
+	cd ocp_addons-$(VERSION) && python ../fix_libs.py $(MODULES) && cd ..
 	python -m wheel pack ocp_addons-$(VERSION)
+	
 	mkdir -p wheelhouse
 	mv ocp_addons-$(VERSION)*.whl wheelhouse
 
@@ -43,6 +47,11 @@ wheel-windows: clean-windows
 	call "$(VCVARSALL)" x64 -vcvars_ver=14.29 && ^\
 	set CXX=cl.exe && ^\
 	python -m build -n -w
+
+	python -m wheel unpack dist/*.whl
+	cd ocp_addons-$(VERSION) && python fix_libs.py && cd ..
+	python -m wheel pack ocp_addons-$(VERSION)
+	
 	mkdir wheelhouse
 	copy dist\ocp_addons-$(VERSION)*.whl wheelhouse
 
