@@ -193,7 +193,7 @@ if platform.system() == "Linux":
         libs = []
         for lib in occ_libs:
             target = f"lib{lib}.so"
-            so_lib = next(Path.glob(lib_path, f"lib{lib}*.so.*"))
+            so_lib = next(Path.glob(lib_path, f"lib{lib}-*.so.*"))
             lib_name = so_lib.name[3:].split("-")[0]
 
             if not libs_exists:
