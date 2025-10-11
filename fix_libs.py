@@ -43,10 +43,11 @@ elif platform.system() == "Darwin":
         f"install_name_tool -change @rpath/libc++.1.dylib /usr/lib/libc++.1.dylib {so_file}"
     )
 
-    # Delete CONDA rpath
-    execute(
-        f"install_name_tool -delete_rpath {os.environ['CONDA_PREFIX']}/lib {so_file}"
-    )
+    if sys.version_info >= (3, 12):
+        # Delete CONDA rpath
+        execute(
+            f"install_name_tool -delete_rpath {os.environ['CONDA_PREFIX']}/lib {so_file}"
+        )
 
     # Add vtk rpath
     execute(
