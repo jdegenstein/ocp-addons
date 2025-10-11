@@ -32,7 +32,10 @@ def tool_path(tool_name):
         subprocess.CalledProcessError: If the `vswhere.exe` command fails.
     """
     result = subprocess.run(
-        ["C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe", "-utf8"],
+        [
+            "C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe",
+            "-utf8",
+        ],
         stdout=subprocess.PIPE,
         encoding="utf-8",
         text=True,

@@ -22,8 +22,8 @@ wheel-macos: clean
 	python -m wheel unpack dist/*.whl
 	cd ocp_addons-$(VERSION) && python ../fix_libs.py $(MODULES) && cd ..
 	python -m wheel pack ocp_addons-$(VERSION)
-	mkdir -p wheelhouse
 	
+	mkdir -p wheelhouse
 	mv ocp_addons-$(VERSION)*.whl wheelhouse
 
 wheel-linux: clean
