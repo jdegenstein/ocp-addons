@@ -15,7 +15,6 @@ def execute(cmd):
     print(result.stderr)
     return result.stdout
 
-
 if platform.system() == "Linux":
     so_file = next(Path.glob(Path.cwd(), "ocp_addons.cpython-*.so"))
     so_libs = Path(site.getsitepackages()[0]) / "cadquery_ocp.libs"
@@ -73,7 +72,7 @@ elif platform.system() == "Darwin":
             f"install_name_tool -change {rpath} @loader_path/../OCP/.dylibs/{ocp_lib} {so_file}"
         )
 elif platform.system() == "Windows":
-    so_file = next(Path.glob(Path.cwd(), "ocp_addons.cp*.so"))
+    so_file = next(Path.glob(Path.cwd(), "ocp_addons.cp*.pyd"))
 
 # Build package tree
 
@@ -92,7 +91,7 @@ def _ocpmodules():
     os.add_dll_directory(libs_dir)
 _ocpmodules()
 del _ocpmodules
-    from ocp_addons.ocp–_addons import *""")
+from ocp_addons.ocp–_addons import *""")
 
     else:
         fd.write("""from ocp_addons.ocp_addons import *""")

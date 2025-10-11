@@ -32,27 +32,32 @@ def tool_path(tool_name):
         subprocess.CalledProcessError: If the `vswhere.exe` command fails.
     """
     result = subprocess.run(
-        ["C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe"],
+        ["C:\\Program Files (x86)\\Microsoft Visual Studio\\Installer\\vswhere.exe", "-utf8"],
         stdout=subprocess.PIPE,
         encoding="utf-8",
         text=True,
         check=True,
     )
     lines = result.stdout.splitlines()
+
     for line in lines:
         if "installationPath" in line:
             prefix = Path(line.split(": ")[1].strip()).parent
+            if os.environ.get("GITHUB_ACTIONS") is None:
+                return (
+                    prefix
+                    / "BuildTools"
+                    / "VC"
+                    / "Tools"
+                    / "MSVC"
+                    / "14.29.30133"
+                    / "bin"
+                    / "Hostx64"
+                    / "x64"
+                    / tool_name
+                )
             return (
                 prefix
-                # / "BuildTools"
-                # / "VC"
-                # / "Tools"
-                # / "MSVC"
-                # / "14.29.30133"
-                # / "bin"
-                # / "Hostx64"
-                # / "x64"
-                # / tool_name
                 / "Enterprise"
                 / "VC"
                 / "Tools"
