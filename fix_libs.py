@@ -86,6 +86,8 @@ with open(target / "__init__.py", "w") as fd:
     if platform.system() == "Windows":
         fd.write("""
 def _ocpmodules():
+    import os
+                 
     libs_dir = os.path.abspath(
         os.path.join(os.path.dirname(__file__), os.pardir, "cadquery_ocp.libs")
     )
