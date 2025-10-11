@@ -56,10 +56,12 @@ elif platform.system() == "Darwin":
 
     dump = execute(f"otool -L {so_file}").split("\n")
 
+    prefix = "@rpath" if sys.version_info >= (3, 12) else "/DLC/OCP/.dylibs"
+
     rpaths = [
-        re.search(r"(@rpath/lib[\w\.]+\.dylib)", line).group(1)
+        re.search(rf"({prefix}/lib[\w\.]+\.dylib)", line).group(1)
         for line in dump
-        if "@rpath" in line
+        if prefix in line
     ]
 
     dylibs = Path(site.getsitepackages()[0]) / "OCP" / ".dylibs"
