@@ -277,6 +277,11 @@ elif platform.system() == "Windows":
     include_dirs = [str(occt_sdk[0])]
     library_dirs = [str(local_libs)]
 
+    extra_compile_args.extend([
+        "/O2",
+        "/EHsc",
+    ])
+
 else:
     raise RuntimeError(f"Platform {platform.system()} is not supported")
 
