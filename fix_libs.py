@@ -15,6 +15,7 @@ def execute(cmd):
     print(result.stderr)
     return result.stdout
 
+
 if platform.system() == "Linux":
     so_file = next(Path.glob(Path.cwd(), "ocp_addons.cpython-*.so"))
     so_libs = Path(site.getsitepackages()[0]) / "cadquery_ocp.libs"
