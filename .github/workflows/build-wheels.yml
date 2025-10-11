@@ -73,7 +73,7 @@ jobs:
                   wheel-version: ${{ steps.get_version.outputs.value }}
 
     tests:
-        name: Test OCP Addons on ${{ matrix.os }}
+        name: Test OCP Addons for ${{ matrix.python-version }} on ${{ matrix.os }}
         runs-on: ${{ matrix.os }}
         needs: [addons-ubuntu, addons-win-mac]
 
