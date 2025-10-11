@@ -91,7 +91,7 @@ def _ocpmodules():
     os.add_dll_directory(libs_dir)
 _ocpmodules()
 del _ocpmodules
-from ocp_addons.ocp–_addons import *""")
+from ocp_addons.ocp_addons import *""")
 
     else:
         fd.write("""from ocp_addons.ocp_addons import *""")
