@@ -311,7 +311,7 @@ MeshData tessellate(py::object obj, double deflection, double angular_tolerance,
         timer.start("Computing BRep incremental mesh", 1, timeit);
 
         // https://dev.opencascade.org/node/81262#comment-21130
-        BRepTools::Clean(shape);
+        // BRepTools::Clean(shape);
         BRepMesh_IncrementalMesh mesher(shape, deflection, Standard_False, angular_tolerance, parallel);
         logger.debug("IsDone", mesher.IsDone());
         logger.debug("GetStatusFlags", mesher.GetStatusFlags());
