@@ -160,3 +160,7 @@ cython_debug/
 #.idea/
 wheelhouse
 *.stl
+main.py
+*.brep
+.vscode
+
