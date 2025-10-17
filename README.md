@@ -65,7 +65,7 @@ mkdir test
 cd test
 uv venv -p 3.12
 source .venv/bin/activate
-uv pip install ../wheelhouse/ocp_addons-0.1.7-cp312-cp312-macosx_11_0_arm64.whl
+uv pip install ../wheelhouse/ocp_addons-1.0.0.rc1-cp312-cp312-macosx_11_0_arm64.whl
 ```
 
 This should be installed for cadquery_ocps 7.8.1.1.post1:
@@ -80,7 +80,7 @@ Installed 14 packages in 33ms
  + kiwisolver==1.4.9
  + matplotlib==3.10.7
  + numpy==2.3.3
- + ocp-addons==0.1.7 (from file:///Users/bernhard/Development/CAD/ocp-addons/wheelhouse/ocp_addons-0.1.7-cp312-cp312-macosx_11_0_arm64.whl)
+ + ocp-addons==1.0.0.rc1 (from file:///Users/bernhard/Development/CAD/ocp-addons/wheelhouse/ocp_addons-1.0.0.rc1-cp312-cp312-macosx_11_0_arm64.whl)
  + packaging==25.0
  + pillow==11.3.0
  + pyparsing==3.2.5

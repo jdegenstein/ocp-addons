@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "ocp_addons"
-version = "0.1.7"
+version = "1.0.0.rc1"
 description = "Addon packages for OCP"
 readme = "README.md"
 authors = [
