@@ -126,12 +126,12 @@ jobs:
                   field: "project.version"
 
             - name: Download ocp-addons wheel
-                uses: actions/download-artifact@v4
-                with:
-                    name: ocp-addons-${{ steps.get_version.outputs.value }}-wheel-${{ matrix.os }}-cp${{ matrix.python-version }}
-                    path: ./wheelhouse
+              uses: actions/download-artifact@v4
+              with:
+                  name: ocp-addons-${{ steps.get_version.outputs.value }}-wheel-${{ matrix.os }}-cp${{ matrix.python-version }}
+                  path: ./wheelhouse
 
             - name: Upload wheels to GitHub Release
-                uses: softprops/action-gh-release@v1
-                with:
+              uses: softprops/action-gh-release@v1
+              with:
                   files: ./wheelhouse/*.whl
