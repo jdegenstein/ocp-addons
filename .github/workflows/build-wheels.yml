@@ -7,6 +7,10 @@ on:
         - main
         tags:
         - '*'
+
+env:
+  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
 jobs:
     addons-ubuntu:
         name: Build OCP addons for ${{ matrix.python-version }} on ${{ matrix.os }}
