@@ -4,8 +4,9 @@ on:
     workflow_dispatch:
     push:
         branches:
-            - new_approach
-
+        - main
+        tags:
+        - '*'
 jobs:
     addons-ubuntu:
         name: Build OCP addons for ${{ matrix.python-version }} on ${{ matrix.os }}

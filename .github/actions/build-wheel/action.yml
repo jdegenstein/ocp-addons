@@ -116,10 +116,19 @@ runs:
     # - - -
 
     - name: Upload Artifact
+      if: not startsWith(github.ref, 'refs/tags/')
       uses: actions/upload-artifact@v4
       with:
         name: ocp-addons-${{ inputs.wheel-version }}-wheel-${{ inputs.os }}-cp${{ inputs.python-version }}
         path: ./wheelhouse/*.whl
 
+    # - - -
 
+    - name: Upload wheels to GitHub Release
+      uses: softprops/action-gh-release@v1
+      if: startsWith(github.ref, 'refs/tags/')
+      with:
+        files: ./wheelhouse/*.whl
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
