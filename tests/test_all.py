@@ -3,7 +3,9 @@ from time import time
 
 import pytest
 
-# Import OCP first - required on Windows for pybind11 type sharing
+from ocp_addons.tessellator import tessellate
+from ocp_addons import serializer
+
 from OCP.BRepPrimAPI import BRepPrimAPI_MakeBox
 from OCP.BRepFilletAPI import BRepFilletAPI_MakeFillet
 from OCP.BRepMesh import BRepMesh_IncrementalMesh
@@ -14,10 +16,6 @@ from OCP.StlAPI import StlAPI_Writer
 from OCP.RWStl import RWStl
 from OCP.BRep import BRep_Builder
 from OCP.gp import gp_Pnt
-
-# Import ocp_addons after OCP
-from ocp_addons.tessellator import tessellate
-from ocp_addons import serializer
 
 
 def almost_equal(result, expected, tolerance=1e-6):

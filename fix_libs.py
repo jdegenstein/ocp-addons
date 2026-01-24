@@ -102,11 +102,6 @@ def _ocpmodules():
             break
 _ocpmodules()
 del _ocpmodules
-
-# Import OCP first to ensure type registrations are in place for pybind11
-import OCP.TopoDS
-import OCP.TopLoc
-
 from ocp_addons.ocp_addons import *""")
 
     else:
