@@ -12,47 +12,47 @@ env:
     OCP_VERSION: "7.9.3.0"
 
 jobs:
-    addons-ubuntu:
-        name: Build OCP addons (${{ matrix.ocp-variant }}) for ${{ matrix.python-version }} on ${{ matrix.os }}
-        runs-on: ${{ matrix.runner }}
-        container:
-            image: ubuntu:20.04
-            options: --name ci-ubuntu-20 # needed for manylinux_2_31
-        strategy:
-            fail-fast: false
-            matrix:
-                os: ["ubuntu-22.04", "ubuntu-22.04-arm"]
-                python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
-                ocp-variant: ["novtk", "vtk"]
-                include:
-                    - os: "ubuntu-22.04"
-                      runner: ubuntu-latest
-                    - os: "ubuntu-22.04-arm"
-                      runner: ubuntu-24.04-arm
-                exclude:
-                    - python-version: "3.14"
-                      ocp-variant: "vtk"
+    # addons-ubuntu:
+    #     name: Build OCP addons (${{ matrix.ocp-variant }}) for ${{ matrix.python-version }} on ${{ matrix.os }}
+    #     runs-on: ${{ matrix.runner }}
+    #     container:
+    #         image: ubuntu:20.04
+    #         options: --name ci-ubuntu-20 # needed for manylinux_2_31
+    #     strategy:
+    #         fail-fast: false
+    #         matrix:
+    #             os: ["ubuntu-22.04", "ubuntu-22.04-arm"]
+    #             python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+    #             ocp-variant: ["novtk", "vtk"]
+    #             include:
+    #                 - os: "ubuntu-22.04"
+    #                   runner: ubuntu-latest
+    #                 - os: "ubuntu-22.04-arm"
+    #                   runner: ubuntu-24.04-arm
+    #             exclude:
+    #                 - python-version: "3.14"
+    #                   ocp-variant: "vtk"
 
-        steps:
-            - uses: actions/checkout@v4
+    #     steps:
+    #         - uses: actions/checkout@v4
 
-            - name: Extract version from pyproject.toml
-              id: get_version
-              uses: SebRollen/toml-action@v1.2.0
-              with:
-                  file: "pyproject.toml"
-                  field: "project.version"
+    #         - name: Extract version from pyproject.toml
+    #           id: get_version
+    #           uses: SebRollen/toml-action@v1.2.0
+    #           with:
+    #               file: "pyproject.toml"
+    #               field: "project.version"
 
-            - name: Build SDKs
-              id: build-ocp-addons
-              uses: ./.github/actions/build-wheel
-              with:
-                  os: ${{ matrix.os }}
-                  python-version: ${{ matrix.python-version }}
-                  shells: "bash"
-                  wheel-version: ${{ steps.get_version.outputs.value }}
-                  ocp-variant: ${{ matrix.ocp-variant }}
-                  ocp-version: ${{ env.OCP_VERSION }}
+    #         - name: Build SDKs
+    #           id: build-ocp-addons
+    #           uses: ./.github/actions/build-wheel
+    #           with:
+    #               os: ${{ matrix.os }}
+    #               python-version: ${{ matrix.python-version }}
+    #               shells: "bash"
+    #               wheel-version: ${{ steps.get_version.outputs.value }}
+    #               ocp-variant: ${{ matrix.ocp-variant }}
+    #               ocp-version: ${{ env.OCP_VERSION }}
 
     addons-win-mac:
         name: Build OCP addons (${{ matrix.ocp-variant }}) for ${{ matrix.python-version }} on ${{ matrix.os }}
@@ -60,19 +60,12 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                os: ["macos-15-intel", "macos-15", "windows-2022"]
-                python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+                os: ["windows-2022"]
+                python-version: ["3.10"]
                 ocp-variant: ["novtk", "vtk"]
                 include:
-                    - os: "macos-15"
-                      shells: "bash"
-                    - os: "macos-15-intel"
-                      shells: "bash"
                     - os: "windows-2022"
                       shells: "bash cmd.exe"
-                exclude:
-                    - python-version: "3.14"
-                      ocp-variant: "vtk"
         steps:
             - uses: actions/checkout@v4
 
@@ -97,26 +90,15 @@ jobs:
     tests:
         name: Test OCP Addons for ${{ matrix.python-version }} on ${{ matrix.os }} with ${{ matrix.ocp-package }}
         runs-on: ${{ matrix.runner }}
-        needs: [addons-ubuntu, addons-win-mac]
+        needs: [addons-win-mac]
 
         strategy:
             fail-fast: false
             matrix:
-                os: ["macos-15-intel", "macos-15", "ubuntu-22.04", "ubuntu-22.04-arm", "windows-2022"]
-                python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+                os: ["windows-2022"]
+                python-version: ["3.10"]
                 ocp-package: ["cadquery_ocp_novtk", "cadquery_ocp"]
-                exclude:
-                    - python-version: "3.14"
-                      ocp-package: "cadquery_ocp"
                 include:
-                    - os: "macos-15-intel"
-                      runner: macos-15-intel
-                    - os: "macos-15"
-                      runner: macos-15
-                    - os: "ubuntu-22.04"
-                      runner: ubuntu-22.04
-                    - os: "ubuntu-22.04-arm"
-                      runner: ubuntu-24.04-arm
                     - os: "windows-2022"
                       runner: windows-2022
                     - ocp-package: "cadquery_ocp_novtk"
@@ -145,35 +127,35 @@ jobs:
                   ocp-version: ${{ env.OCP_VERSION }}
                   ocp-variant: ${{ matrix.ocp-variant }}
 
-    release:
-        name: Release wheels to repo
-        runs-on: ubuntu-latest
-        if: ${{ startsWith(github.ref, 'refs/tags/') }}
+    # release:
+    #     name: Release wheels to repo
+    #     runs-on: ubuntu-latest
+    #     if: ${{ startsWith(github.ref, 'refs/tags/') }}
 
-        needs: tests
+    #     needs: tests
 
-        permissions:
-            contents: write
+    #     permissions:
+    #         contents: write
 
-        steps:
-            - uses: actions/checkout@v4
+    #     steps:
+    #         - uses: actions/checkout@v4
 
-            - name: Extract version from pyproject.toml
-              id: get_version
-              uses: SebRollen/toml-action@v1.2.0
-              with:
-                  file: "pyproject.toml"
-                  field: "project.version"
+    #         - name: Extract version from pyproject.toml
+    #           id: get_version
+    #           uses: SebRollen/toml-action@v1.2.0
+    #           with:
+    #               file: "pyproject.toml"
+    #               field: "project.version"
 
-            - name: Download all wheel artifacts
-              uses: actions/download-artifact@v4
-              with:
-                  path: wheels
-                  pattern: ocp-addons-*
-                  merge-multiple: true
+    #         - name: Download all wheel artifacts
+    #           uses: actions/download-artifact@v4
+    #           with:
+    #               path: wheels
+    #               pattern: ocp-addons-*
+    #               merge-multiple: true
 
-            - name: Upload wheels to GitHub Release
-              uses: softprops/action-gh-release@v2
-              with:
-                  name: Release ${{ steps.get_version.outputs.value }}
-                  files: wheels/*.whl
+    #         - name: Upload wheels to GitHub Release
+    #           uses: softprops/action-gh-release@v2
+    #           with:
+    #               name: Release ${{ steps.get_version.outputs.value }}
+    #               files: wheels/*.whl
