@@ -7,7 +7,10 @@ on:
         - main
         tags:
         - '*'
-        
+
+env:
+    OCP_VERSION: "7.9.3.0"
+
 jobs:
     addons-ubuntu:
         name: Build OCP addons for ${{ matrix.python-version }} on ${{ matrix.os }}
@@ -75,7 +78,7 @@ jobs:
                   wheel-version: ${{ steps.get_version.outputs.value }}
 
     tests:
-        name: Test OCP Addons for ${{ matrix.python-version }} on ${{ matrix.os }}
+        name: Test OCP Addons for ${{ matrix.python-version }} on ${{ matrix.os }} with ${{ matrix.ocp-package }}
         runs-on: ${{ matrix.os }}
         needs: [addons-ubuntu, addons-win-mac]
 
@@ -84,6 +87,7 @@ jobs:
             matrix:
                 os: ["macos-13", "macos-15", "ubuntu-22.04", "windows-2022"]
                 python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+                ocp-package: ["cadquery_ocp_novtk", "cadquery_ocp"]
 
         steps:
             - uses: actions/checkout@v4
@@ -102,6 +106,8 @@ jobs:
                   os: ${{ matrix.os }}
                   python-version: ${{ matrix.python-version }}
                   wheel-version: ${{ steps.get_version.outputs.value }}
+                  ocp-package: ${{ matrix.ocp-package }}
+                  ocp-version: ${{ env.OCP_VERSION }}
 
     release:
         runs-on: ubuntu-latest

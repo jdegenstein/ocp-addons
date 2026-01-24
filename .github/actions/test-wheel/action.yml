@@ -10,6 +10,12 @@ inputs:
   wheel-version:
     description: "Version of the wheel to build"
     required: true
+  ocp-package:
+    description: "OCP package to test with (cadquery_ocp_novtk or cadquery_ocp)"
+    required: true
+  ocp-version:
+    description: "OCP package version to install"
+    required: true
 
 runs:
   using: "composite"
@@ -70,6 +76,15 @@ runs:
 
     # - - -
     
+    - name: Install OCP package
+      shell: bash -leo pipefail {0}
+      run: |
+        # Install OCP package (${{ inputs.ocp-package }})
+
+        pip install ${{ inputs.ocp-package }}==${{ inputs.ocp-version }}
+
+    # - - -
+
     - name: Install OCP addons wheel
       shell: bash -leo pipefail {0}
       run: |
