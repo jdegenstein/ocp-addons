@@ -12,8 +12,8 @@ authors = [
     { name = "Matthias J" },
     { name = "Bernhard Walter" },
 ]
-dependencies = ["cadquery_ocp==7.8.1.1.post1"]
-requires-python = ">=3.10"
+dependencies = ["cadquery_ocp_proxy==7.9.3.0"]
+requires-python = ">=3.10, <3.15"
 
 [project.urls]
 Homepage = "https://github.com/jdegenstein/ocp-addons.git"
