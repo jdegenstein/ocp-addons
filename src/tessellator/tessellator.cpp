@@ -75,7 +75,7 @@ MeshData collect_mesh_data(
     auto triangles = new int[3 * num_triangles];
     auto triangles_per_face = new int[num_faces];
     auto face_types = new int[num_faces];
-    auto edge_types = new int[num_edges];
+    int *edge_types = nullptr;  // Allocated later based on compute_missing_edges
 
     int v_total = 0;
     int t_total = 0;
@@ -156,22 +156,45 @@ MeshData collect_mesh_data(
         }
     }
 
-    auto segments = new double[6 * num_segments];
-    auto segments_per_edge = new int[num_edges];
+    double *segments = nullptr;
+    int *segments_per_edge = nullptr;
 
     /*
      * Collect segments
      */
     int e_total = 0;
 
-    if (compute_missing_edges)
+    if (num_edges > 0)
     {
+        // Use actual edges from BREP
+        timer.reset("Collecting edges", 2);
+        segments = new double[6 * num_segments];
+        segments_per_edge = new int[num_edges];
+        edge_types = new int[num_edges];
+        for (int i = 0; i < num_edges; i++)
+        {
+            auto e = edge_list[i];
+
+            for (int j = 0; j < 6 * e.num_segments; j++)
+            {
+                segments[e_total + j] = e.segments[j];
+            }
+            segments_per_edge[i] = e.num_segments;
+            edge_types[i] = e.edge_type;
+
+            e_total += 6 * e.num_segments;
+        }
+    }
+    else if (compute_missing_edges)
+    {
+        // Compute edges from triangles
         timer.reset("Compute missing edges", 2);
 
         num_edges = num_triangles;
         num_segments = 3 * num_triangles;
         segments = new double[18 * num_edges];
         segments_per_edge = new int[num_edges];
+        edge_types = new int[num_edges];
 
         for (int i = 0; i < num_triangles; i++)
         {
@@ -204,24 +227,15 @@ MeshData collect_mesh_data(
             segments[e_total + 17] = c0_2;
             e_total += 18;
             segments_per_edge[i] = 3;
+            edge_types[i] = 0;  // Computed edges have unknown type
         }
     }
     else
     {
-        timer.reset("Collecting edges", 2);
-        for (int i = 0; i < num_edges; i++)
-        {
-            auto e = edge_list[i];
-
-            for (int j = 0; j < 6 * e.num_segments; j++)
-            {
-                segments[e_total + j] = e.segments[j];
-            }
-            segments_per_edge[i] = e.num_segments;
-            edge_types[i] = e.edge_type;
-
-            e_total += 6 * e.num_segments;
-        }
+        // No edges requested - allocate empty arrays
+        segments = new double[0];
+        segments_per_edge = new int[0];
+        edge_types = new int[0];
     }
 
     timer.reset("Create MeshData", 2);
@@ -389,6 +403,14 @@ MeshData tessellate(py::object obj, double deflection, double angular_tolerance,
                             face_list[i].normals[3 * j + 2] = normal.Z();
 
                             logger.trace_xyz(" normal", normal.X(), normal.Y(), normal.Z(), false);
+                        }
+                        else
+                        {
+                            // No UV nodes (e.g., STL import) - initialize normals to zero
+                            // They will be computed later in collect_mesh_data if needed
+                            face_list[i].normals[3 * j] = 0.0;
+                            face_list[i].normals[3 * j + 1] = 0.0;
+                            face_list[i].normals[3 * j + 2] = 0.0;
                         }
                     }
 
