@@ -61,7 +61,7 @@ jobs:
             fail-fast: false
             matrix:
                 os: ["windows-2022"]
-                python-version: ["3.10"]
+                python-version: ["3.12"]
                 ocp-variant: ["novtk", "vtk"]
                 include:
                     - os: "windows-2022"
@@ -96,7 +96,7 @@ jobs:
             fail-fast: false
             matrix:
                 os: ["windows-2022"]
-                python-version: ["3.10"]
+                python-version: ["3.12"]
                 ocp-package: ["cadquery_ocp_novtk", "cadquery_ocp"]
                 include:
                     - os: "windows-2022"
