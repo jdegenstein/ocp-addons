@@ -212,6 +212,8 @@ if platform.system() == "Linux":
         return libs
 
     ocp_path = site_pkgs / "cadquery_ocp.libs"
+    if not ocp_path.exists():
+        ocp_path = site_pkgs / "cadquery_ocp_novtk.libs"
     print("ocp_path", str(ocp_path))
 
     include_dirs = [str(occt_sdk)]
@@ -272,6 +274,8 @@ elif platform.system() == "Windows":
         return libs
 
     ocp_path = site_pkgs / "cadquery_ocp.libs"
+    if not ocp_path.exists():
+        ocp_path = site_pkgs / "cadquery_ocp_novtk.libs"
     print("ocp_path", str(ocp_path))
 
     include_dirs = [str(occt_sdk[0])]
