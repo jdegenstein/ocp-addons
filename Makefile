@@ -53,7 +53,13 @@ wheel-windows: clean-windows
 	copy ocp_addons-$(VERSION)*.whl wheelhouse
 
 clean:
-	rm -fr ocp_addons.egg-info build dist wheelhouse libs ocp_addons-$(VERSION) test
+	rm -fr ocp_addons.egg-info build dist libs ocp_addons-$(VERSION) test
+
+clean-wheelhouse:
+	rm -fr wheelhouse
 
 clean-windows:
-	rmdir /S /Q ocp_addons.egg-info build dist wheelhouse libs ocp_addons-$(VERSION) test  2> NUL || exit 0
+	rmdir /S /Q ocp_addons.egg-info build dist libs ocp_addons-$(VERSION) test  2> NUL || exit 0
+
+clean-wheelhouse-windows:
+	rmdir /S /Q wheelhouse  2> NUL || exit 0
