@@ -79,7 +79,21 @@ runs:
         cat environment.yml
 
     # - - -
-    
+
+    - name: Prepare pyproject.toml
+      if: steps.cache-wheel-restore.outputs.cache-hit != 'true'
+      shell: bash -leo pipefail {0}
+      run: |
+        # Prepare pyproject.toml - add _novtk suffix for novtk variant
+
+        if [[ "${{ inputs.ocp-variant }}" == "novtk" ]]; then
+          sed -i 's/cadquery_ocp/cadquery_ocp_novtk/' pyproject.toml
+        fi
+
+        cat pyproject.toml
+
+    # - - -
+
     - name: Set up Python ${{ inputs.python-version }} via micromamba
       if: steps.cache-wheel-restore.outputs.cache-hit != 'true'
       uses: mamba-org/setup-micromamba@v2

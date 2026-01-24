@@ -12,7 +12,7 @@ authors = [
     { name = "Matthias J" },
     { name = "Bernhard Walter" },
 ]
-dependencies = ["cadquery_ocp_proxy==7.9.3.0", "numpy"]
+dependencies = ["cadquery_ocp==7.9.3.0", "numpy"]
 requires-python = ">=3.10, <3.15"
 
 [project.urls]
