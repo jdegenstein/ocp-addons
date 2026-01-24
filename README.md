@@ -97,3 +97,42 @@ uv pip install build123d ocp_vscode
 cp  -R ../examples ../test.py .  # or similar under Windows
 python test.py
 ```
+
+## Contribution
+
+### Windows pybind11 Type Sharing
+
+On Windows, pybind11 uses pointer comparison for `std::type_info` (unlike Linux/macOS which use string comparison). This causes type mismatch errors when passing OCP types to ocp_addons functions:
+
+```
+RuntimeError: Unable to cast Python instance of type <class 'OCP.OCP.TopoDS.TopoDS_Shape'> to C++ type '?'
+```
+
+**Solution**: Instead of relying on pybind11's automatic type casting, we directly access the C++ object pointer from the pybind11 instance's internal `simple_value_holder[0]` field. The utilities are in `src/ocp_utils.h`:
+
+- `ocp_utils::extract_shape(py::handle)` - Extract `TopoDS_Shape*` from OCP Python object
+- `ocp_utils::extract_location(py::handle)` - Extract `TopLoc_Location*` from OCP Python object
+- `ocp_utils::create_shape(const TopoDS_Shape&)` - Create OCP Python object from C++ shape
+- `ocp_utils::create_location(const TopLoc_Location&)` - Create OCP Python object from C++ location
+
+#### Usage example
+
+```cpp
+#include "ocp_utils.h"
+using namespace ocp_utils;
+
+// Accepting OCP types: use py::object parameter and extract pointer
+py::bytes serialize_shape(py::object obj, bool tangents, bool normals) {
+    TopoDS_Shape *shape_ptr = extract_shape(obj);
+    // ... use *shape_ptr
+}
+
+// Returning OCP types: create OCP Python object
+py::object deserialize_shape(const py::bytes &buf) {
+    TopoDS_Shape shape;
+    // ... deserialize into shape
+    return create_shape(shape);
+}
+```
+
+This approach works because pybind11's `instance` struct layout places the C++ object pointer at `simple_value_holder[0]` after `PyObject_HEAD`, allowing us to bypass the type registry entirely

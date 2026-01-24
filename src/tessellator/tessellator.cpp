@@ -1,19 +1,9 @@
 #include "tessellator.h"
 #include "utils.h"
-#include <pybind11/detail/internals.h>
+#include "../ocp_utils.h"
 
 namespace py = pybind11;
-
-// Helper function to extract TopoDS_Shape pointer from any pybind11 object
-// This works around the Windows type_info mismatch issue
-static TopoDS_Shape* extract_shape_ptr(py::handle obj) {
-    auto *inst = reinterpret_cast<py::detail::instance *>(obj.ptr());
-    void *ptr = inst->simple_value_holder[0];
-    if (ptr) {
-        return reinterpret_cast<TopoDS_Shape*>(ptr);
-    }
-    throw py::type_error("Could not extract TopoDS_Shape pointer from object");
-}
+using namespace ocp_utils;
 
 GeomAbs_SurfaceType get_face_type(TopoDS_Face face)
 {
@@ -310,7 +300,7 @@ MeshData tessellate(py::object obj, double deflection, double angular_tolerance,
      * Tessellate mesh
      */
 
-    auto *shape_ptr = extract_shape_ptr(obj);
+    auto *shape_ptr = extract_shape(obj);
     const TopoDS_Shape &shape = *shape_ptr;
 
     Logger logger(debug);
