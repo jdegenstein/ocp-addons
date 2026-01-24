@@ -19,13 +19,11 @@ def execute(cmd):
 if platform.system() == "Linux":
     so_file = next(Path.glob(Path.cwd(), "ocp_addons.cpython-*.so"))
     so_libs = Path(site.getsitepackages()[0]) / "cadquery_ocp.libs"
-    libs_dir = "cadquery_ocp.libs"
     if not so_libs.exists():
         so_libs = Path(site.getsitepackages()[0]) / "cadquery_ocp_novtk.libs"
-        libs_dir = "cadquery_ocp_novtk.libs"
 
-    # Change the runpath to point to the OCP packages dynamic libs folder
-    execute(f"patchelf --set-rpath '$ORIGIN/../{libs_dir}' {so_file}")
+    # Change the runpath to point to both OCP packages dynamic libs folders
+    execute(f"patchelf --set-rpath '$ORIGIN/../cadquery_ocp.libs:$ORIGIN/../cadquery_ocp_novtk.libs' {so_file}")
     dump = execute(f"readelf -d {so_file}").split("\n")
 
     libs = [
