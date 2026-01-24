@@ -14,15 +14,20 @@ env:
 jobs:
     addons-ubuntu:
         name: Build OCP addons for ${{ matrix.python-version }} on ${{ matrix.os }}
-        runs-on: ubuntu-latest
+        runs-on: ${{ matrix.runner }}
         container:
             image: ubuntu:20.04
-            options: --name ci-ubuntu-20 # needed for manylinux_3_31
+            options: --name ci-ubuntu-20 # needed for manylinux_2_31
         strategy:
             fail-fast: false
             matrix:
-                os: ["ubuntu-22.04"]
+                os: ["ubuntu-22.04", "ubuntu-22.04-arm"]
                 python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+                include:
+                    - os: "ubuntu-22.04"
+                      runner: ubuntu-latest
+                    - os: "ubuntu-22.04-arm"
+                      runner: ubuntu-24.04-arm
 
         steps:
             - uses: actions/checkout@v4
@@ -49,12 +54,12 @@ jobs:
         strategy:
             fail-fast: false
             matrix:
-                os: ["macos-13", "macos-15", "windows-2022"]
+                os: ["macos-15-intel", "macos-15", "windows-2022"]
                 python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
                 include:
                     - os: "macos-15"
                       shells: "bash"
-                    - os: "macos-13"
+                    - os: "macos-15-intel"
                       shells: "bash"
                     - os: "windows-2022"
                       shells: "bash cmd.exe"
@@ -79,15 +84,26 @@ jobs:
 
     tests:
         name: Test OCP Addons for ${{ matrix.python-version }} on ${{ matrix.os }} with ${{ matrix.ocp-package }}
-        runs-on: ${{ matrix.os }}
+        runs-on: ${{ matrix.runner }}
         needs: [addons-ubuntu, addons-win-mac]
 
         strategy:
             fail-fast: false
             matrix:
-                os: ["macos-13", "macos-15", "ubuntu-22.04", "windows-2022"]
+                os: ["macos-15-intel", "macos-15", "ubuntu-22.04", "ubuntu-22.04-arm", "windows-2022"]
                 python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
                 ocp-package: ["cadquery_ocp_novtk", "cadquery_ocp"]
+                include:
+                    - os: "macos-15-intel"
+                      runner: macos-15-intel
+                    - os: "macos-15"
+                      runner: macos-15
+                    - os: "ubuntu-22.04"
+                      runner: ubuntu-22.04
+                    - os: "ubuntu-22.04-arm"
+                      runner: ubuntu-24.04-arm
+                    - os: "windows-2022"
+                      runner: windows-2022
 
         steps:
             - uses: actions/checkout@v4
@@ -110,22 +126,18 @@ jobs:
                   ocp-version: ${{ env.OCP_VERSION }}
 
     release:
+        name: Release wheels to repo
         runs-on: ubuntu-latest
         if: ${{ startsWith(github.ref, 'refs/tags/') }}
-        
+
         needs: tests
 
         permissions:
-            contents: write        
-
-        strategy:
-            matrix:
-                os: ["macos-13", "macos-15", "ubuntu-22.04", "windows-2022"]
-                python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+            contents: write
 
         steps:
-            - uses: actions/checkout@v4        
-            
+            - uses: actions/checkout@v4
+
             - name: Extract version from pyproject.toml
               id: get_version
               uses: SebRollen/toml-action@v1.2.0
@@ -133,13 +145,15 @@ jobs:
                   file: "pyproject.toml"
                   field: "project.version"
 
-            - name: Download ocp-addons wheel
+            - name: Download all wheel artifacts
               uses: actions/download-artifact@v4
               with:
-                  name: ocp-addons-${{ steps.get_version.outputs.value }}-wheel-${{ matrix.os }}-cp${{ matrix.python-version }}
-                  path: ./wheelhouse
+                  path: wheels
+                  pattern: ocp-addons-*
+                  merge-multiple: true
 
             - name: Upload wheels to GitHub Release
-              uses: softprops/action-gh-release@v1
+              uses: softprops/action-gh-release@v2
               with:
-                  files: ./wheelhouse/*.whl
+                  name: Release ${{ steps.get_version.outputs.value }}
+                  files: wheels/*.whl
