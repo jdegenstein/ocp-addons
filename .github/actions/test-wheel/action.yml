@@ -37,6 +37,7 @@ runs:
       uses: actions/download-artifact@v4
       with:
         name: ocp-addons-${{ inputs.wheel-version }}-wheel-${{ inputs.os }}-cp${{ inputs.python-version }}
+        path: wheels
 
     # - - -
 
@@ -46,7 +47,7 @@ runs:
         # Install OCP package (${{ inputs.ocp-package }}) and ocp-addons wheel
 
         uv pip install ${{ inputs.ocp-package }}==${{ inputs.ocp-version }}
-        uv pip install ocp_addons-*.whl
+        uv pip install wheels/ocp_addons-*.whl
         uv pip install pytest
 
         uv pip list
