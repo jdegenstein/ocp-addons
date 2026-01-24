@@ -4,8 +4,13 @@ from time import time
 import numpy as np
 import pytest
 
-from ocp_addons.tessellator import tessellate
-from ocp_addons import serializer
+# Import ocp_addons or ocp_addons_novtk depending on which is installed
+try:
+    from ocp_addons.tessellator import tessellate
+    from ocp_addons import serializer
+except ImportError:
+    from ocp_addons_novtk.tessellator import tessellate
+    from ocp_addons_novtk import serializer
 
 # Import ocp_tessellate for comparison tests
 from ocp_tessellate.tessellator import Tessellator as PythonTessellator

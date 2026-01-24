@@ -87,6 +87,9 @@ runs:
         # Prepare pyproject.toml - add _novtk suffix for novtk variant
 
         if [[ "${{ inputs.ocp-variant }}" == "novtk" ]]; then
+          # Change package name: ocp_addons -> ocp_addons_novtk
+          sed -i 's/name = "ocp_addons"/name = "ocp_addons_novtk"/' pyproject.toml
+          # Change dependency: cadquery_ocp -> cadquery_ocp_novtk
           sed -i 's/cadquery_ocp/cadquery_ocp_novtk/' pyproject.toml
         fi
 

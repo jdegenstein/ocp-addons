@@ -50,13 +50,19 @@ runs:
         # Install OCP package (${{ inputs.ocp-package }}) and ocp-addons wheel
 
         uv pip install ${{ inputs.ocp-package }}==${{ inputs.ocp-version }}
-        uv pip install wheels/ocp_addons-*.whl
+        uv pip install wheels/ocp_addons*.whl
         uv pip install pytest numpy ocp-tessellate
 
         uv pip list
 
         uv run --no-project python -c "import OCP; print('Success: OCP', OCP.__version__)"
-        uv run --no-project python -c "import ocp_addons; print('Success: ocp-addons serializer:', ocp_addons.serializer._test())"
+
+        # Import the correct module based on variant
+        if [[ "${{ inputs.ocp-variant }}" == "novtk" ]]; then
+          uv run --no-project python -c "import ocp_addons_novtk; print('Success: ocp-addons-novtk serializer:', ocp_addons_novtk.serializer._test())"
+        else
+          uv run --no-project python -c "import ocp_addons; print('Success: ocp-addons serializer:', ocp_addons.serializer._test())"
+        fi
 
     # - - -
 
