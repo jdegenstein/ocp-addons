@@ -122,7 +122,7 @@ RuntimeError: Unable to cast Python instance of type <class 'OCP.OCP.TopoDS.Topo
 using namespace ocp_utils;
 
 // Accepting OCP types: use py::object parameter and extract pointer
-py::bytes serialize_shape(py::object obj, bool tangents, bool normals) {
+py::bytes serialize_shape(py::object obj, bool triangles, bool normals) {
     TopoDS_Shape *shape_ptr = extract_shape(obj);
     // ... use *shape_ptr
 }

@@ -16,10 +16,10 @@
 namespace py = pybind11;
 using namespace ocp_utils;
 
-py::bytes serialize_shape(py::object obj, bool tangents, bool normals) {
+py::bytes serialize_shape(py::object obj, bool triangles, bool normals) {
     TopoDS_Shape *shape_ptr = extract_shape(obj);
     std::ostringstream buf;
-    BinTools::Write(*shape_ptr, buf, tangents, normals, BinTools_FormatVersion_CURRENT);
+    BinTools::Write(*shape_ptr, buf, triangles, normals, BinTools_FormatVersion_CURRENT);
     return py::bytes(std::move(buf.str()));
 }
 
@@ -57,13 +57,13 @@ std::string _testOCCT() {
 void register_serializer(pybind11::module_ &m_gbl) {
     auto m = m_gbl.def_submodule("serializer");
 
-    m.def("serialize_shape", &serialize_shape, py::arg("shape"), py::arg("tangents") = false, py::arg("normals") = false,
+    m.def("serialize_shape", &serialize_shape, py::arg("shape"), py::arg("triangles") = false, py::arg("normals") = false,
         R"pbdoc(
             Serialize a TopoDS_Shape to bytes.
 
             Args:
                 shape: The TopoDS_Shape to serialize.
-                tangents: Whether to include tangent data in the serialization.
+                triangles: Whether to include triangle data in the serialization.
                 normals: Whether to include normal data in the serialization.
 
             Returns:
