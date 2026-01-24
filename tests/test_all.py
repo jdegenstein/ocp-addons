@@ -6,19 +6,16 @@ import pytest
 from ocp_addons.tessellator import tessellate
 from ocp_addons import serializer
 
-try:
-    import cadquery as cq
-
-    CQ = True
-except Exception:
-    CQ = False
-
-try:
-    import build123d as bd
-
-    BD = True
-except Exception:
-    BD = False
+from OCP.BRepPrimAPI import BRepPrimAPI_MakeBox
+from OCP.BRepFilletAPI import BRepFilletAPI_MakeFillet
+from OCP.BRepMesh import BRepMesh_IncrementalMesh
+from OCP.TopExp import TopExp_Explorer
+from OCP.TopAbs import TopAbs_EDGE
+from OCP.TopoDS import TopoDS, TopoDS_Face
+from OCP.StlAPI import StlAPI_Writer
+from OCP.RWStl import RWStl
+from OCP.BRep import BRep_Builder
+from OCP.gp import gp_Pnt
 
 
 def almost_equal(result, expected, tolerance=1e-6):
@@ -454,16 +451,10 @@ def test_large_rc_object():
     assert list(mesh["obj_vertices"][:3]), [14.25, 10.609, 22.5]
 
 
-@pytest.mark.skipif(not (CQ or BD), reason="Requires CadQuery or build123d")
 def test_simple_box_built_locally():
     """Test tessellation of locally built simple box"""
-    if CQ:
-        wp = cq.Workplane()
-        box = wp.box(1, 2, 3).val()
-        obj = box.wrapped
-    elif BD:
-        box = bd.Box(1, 2, 3)
-        obj = box.wrapped
+    # Create centered box with dimensions 1x2x3 using pure OCP
+    obj = BRepPrimAPI_MakeBox(gp_Pnt(-0.5, -1.0, -1.5), 1.0, 2.0, 3.0).Shape()
 
     acc = 0.002
 
@@ -481,17 +472,35 @@ def test_simple_box_built_locally():
     assert list(mesh["segments_per_edge"]) == expected_segments_per_edge
 
 
-@pytest.mark.skipif(not BD, reason="Requires build123d")
 def test_box_imported_from_stl():
     """Test tessellation of box imported from STL file"""
-    # Create and export a filleted box
-    box = bd.Box(1, 2, 3)
-    box = bd.fillet(box.edges(), 0.3)
-    bd.export_stl(box, "box.stl")
+    # Create a centered box with dimensions 1x2x3 using pure OCP
+    box = BRepPrimAPI_MakeBox(gp_Pnt(-0.5, -1.0, -1.5), 1.0, 2.0, 3.0).Shape()
 
-    # Import from STL
-    box2 = bd.import_stl("box.stl")
-    obj = box2.wrapped
+    # Fillet all edges
+    fillet = BRepFilletAPI_MakeFillet(box)
+    explorer = TopExp_Explorer(box, TopAbs_EDGE)
+    while explorer.More():
+        edge = TopoDS.Edge_s(explorer.Current())
+        fillet.Add(0.3, edge)
+        explorer.Next()
+    filleted_box = fillet.Shape()
+
+    # Mesh the shape for STL export (same parameters as build123d)
+    mesh_algo = BRepMesh_IncrementalMesh(filleted_box, 1e-3, True, 0.1, True)
+    mesh_algo.Perform()
+
+    # Export to STL
+    writer = StlAPI_Writer()
+    writer.Write(filleted_box, "box.stl")
+
+    # Import from STL (same approach as build123d)
+    triangulation = RWStl.ReadFile_s("box.stl")
+    face = TopoDS_Face()
+    BRep_Builder().MakeFace(face, triangulation)
+    imported_shape = face
+
+    obj = imported_shape
     acc = 0.002
 
     mesh = tess(obj, acc, 0.3, parallel=True)
