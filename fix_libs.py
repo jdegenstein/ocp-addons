@@ -19,9 +19,13 @@ def execute(cmd):
 if platform.system() == "Linux":
     so_file = next(Path.glob(Path.cwd(), "ocp_addons.cpython-*.so"))
     so_libs = Path(site.getsitepackages()[0]) / "cadquery_ocp.libs"
+    libs_dir = "cadquery_ocp.libs"
+    if not so_libs.exists():
+        so_libs = Path(site.getsitepackages()[0]) / "cadquery_ocp_novtk.libs"
+        libs_dir = "cadquery_ocp_novtk.libs"
 
     # Change the runpath to point to the OCP packages dynamic libs folder
-    execute(f"patchelf --set-rpath '$ORIGIN/../cadquery_ocp.libs' {so_file}")
+    execute(f"patchelf --set-rpath '$ORIGIN/../{libs_dir}' {so_file}")
     dump = execute(f"readelf -d {so_file}").split("\n")
 
     libs = [
@@ -90,11 +94,14 @@ with open(target / "__init__.py", "w") as fd:
         fd.write("""
 def _ocpmodules():
     import os
-                 
-    libs_dir = os.path.abspath(
-        os.path.join(os.path.dirname(__file__), os.pardir, "cadquery_ocp.libs")
-    )
-    os.add_dll_directory(libs_dir)
+
+    for libs_name in ("cadquery_ocp.libs", "cadquery_ocp_novtk.libs"):
+        libs_dir = os.path.abspath(
+            os.path.join(os.path.dirname(__file__), os.pardir, libs_name)
+        )
+        if os.path.exists(libs_dir):
+            os.add_dll_directory(libs_dir)
+            break
 _ocpmodules()
 del _ocpmodules
 from ocp_addons.ocp_addons import *""")
