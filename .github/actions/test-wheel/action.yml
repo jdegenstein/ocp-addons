@@ -1,5 +1,5 @@
 name: "Test OCP addons"
-description: "Testing OCP addons wheels with build123d and CadQuery"
+description: "Testing OCP addons wheels"
 inputs:
   os:
     description: "Operating system to use for the build"
@@ -100,17 +100,9 @@ runs:
 
     # - - -
 
-    - name: Run build123d tests
+    - name: Run tests
       shell: bash -leo pipefail {0}
       run: |
-        # Run build123d tests
+        # Run tests
 
-        echo "$CONDA_PREFIX"
-        
-        pip install build123d
-        pip list
-        
         pytest -v
-
-        # micromamba run -n test-ocp-addons pip install build123d        
-        # micromamba run -n test-ocp-addons pytest -v
