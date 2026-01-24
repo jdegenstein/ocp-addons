@@ -16,9 +16,9 @@
 
 namespace py = pybind11;
 
-py::bytes serialize_shape(const TopoDS_Shape &shape) {
+py::bytes serialize_shape(const TopoDS_Shape &shape, bool tangents, bool normals) {
     std::ostringstream buf;
-    BinTools::Write(shape, buf);
+    BinTools::Write(shape, buf, tangents, normals, BinTools_FormatVersion_CURRENT);
     return py::bytes(std::move(buf.str()));
 }
 
@@ -55,8 +55,28 @@ std::string _testOCCT() {
 void register_serializer(pybind11::module_ &m_gbl) {
     auto m = m_gbl.def_submodule("serializer");
 
-    m.def("serialize_shape", &serialize_shape);
-    m.def("deserialize_shape", &deserialize_shape);
+    m.def("serialize_shape", &serialize_shape, py::arg("shape"), py::arg("tangents") = false, py::arg("normals") = false,
+        R"pbdoc(
+            Serialize a TopoDS_Shape to bytes.
+
+            Args:
+                shape: The TopoDS_Shape to serialize.
+                tangents: Whether to include tangent data in the serialization.
+                normals: Whether to include normal data in the serialization.
+
+            Returns:
+                bytes: The serialized shape data.
+        )pbdoc");
+    m.def("deserialize_shape", &deserialize_shape, py::arg("buf"),
+        R"pbdoc(
+            Deserialize bytes to a TopoDS_Shape.
+
+            Args:
+                buf: The bytes to deserialize.
+
+            Returns:
+                TopoDS_Shape: The deserialized shape.
+        )pbdoc");
     m.def("serialize_location", &serialize_location);
     m.def("deserialize_location", &deserialize_location);
 
