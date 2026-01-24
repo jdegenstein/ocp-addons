@@ -13,6 +13,12 @@ inputs:
   wheel-version:
     description: "Version of the wheel to build"
     required: true
+  ocp-variant:
+    description: "OCP variant to build against (novtk or vtk)"
+    required: true
+  ocp-version:
+    description: "OCP version to install"
+    required: true
 
 
 runs:
@@ -27,7 +33,7 @@ runs:
       uses: actions/cache/restore@v4
       with:
         path: ${{ github.workspace }}/wheelhouse/
-        key: ocp-addons-${{ inputs.wheel-version }}-wheel-${{ inputs.os }}-cp${{ inputs.python-version }}
+        key: ocp-addons-${{ inputs.wheel-version }}-${{ inputs.ocp-variant }}-wheel-${{ inputs.os }}-cp${{ inputs.python-version }}
     
     # - - -
 
@@ -64,6 +70,12 @@ runs:
 
         sed -i 's/python=3\.1[0-9]/python=${{ inputs.python-version }}/' environment.yml
 
+        # Set the correct OCP package based on variant
+        if [[ "${{ inputs.ocp-variant }}" == "vtk" ]]; then
+          sed -i 's/cadquery_ocp_novtk/cadquery_ocp/' environment.yml
+        fi
+        sed -i 's/==7\.9\.3\.0/==${{ inputs.ocp-version }}/' environment.yml
+
         cat environment.yml
 
     # - - -
@@ -76,7 +88,7 @@ runs:
         log-level: warning
         init-shell: ${{ inputs.shells }}
         cache-environment: true
-        cache-environment-key: environment-${{ inputs.python-version }}-${{ inputs.os }}
+        cache-environment-key: environment-${{ inputs.python-version }}-${{ inputs.os }}-${{ inputs.ocp-variant }}
 
     # - - -
 
@@ -119,5 +131,5 @@ runs:
     - name: Upload Artifact
       uses: actions/upload-artifact@v4
       with:
-        name: ocp-addons-${{ inputs.wheel-version }}-wheel-${{ inputs.os }}-cp${{ inputs.python-version }}
+        name: ocp-addons-${{ inputs.wheel-version }}-${{ inputs.ocp-variant }}-wheel-${{ inputs.os }}-cp${{ inputs.python-version }}
         path: ./wheelhouse/*.whl

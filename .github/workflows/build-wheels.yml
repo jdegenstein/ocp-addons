@@ -13,7 +13,7 @@ env:
 
 jobs:
     addons-ubuntu:
-        name: Build OCP addons for ${{ matrix.python-version }} on ${{ matrix.os }}
+        name: Build OCP addons (${{ matrix.ocp-variant }}) for ${{ matrix.python-version }} on ${{ matrix.os }}
         runs-on: ${{ matrix.runner }}
         container:
             image: ubuntu:20.04
@@ -23,11 +23,15 @@ jobs:
             matrix:
                 os: ["ubuntu-22.04", "ubuntu-22.04-arm"]
                 python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+                ocp-variant: ["novtk", "vtk"]
                 include:
                     - os: "ubuntu-22.04"
                       runner: ubuntu-latest
                     - os: "ubuntu-22.04-arm"
                       runner: ubuntu-24.04-arm
+                exclude:
+                    - python-version: "3.14"
+                      ocp-variant: "vtk"
 
         steps:
             - uses: actions/checkout@v4
@@ -47,15 +51,18 @@ jobs:
                   python-version: ${{ matrix.python-version }}
                   shells: "bash"
                   wheel-version: ${{ steps.get_version.outputs.value }}
+                  ocp-variant: ${{ matrix.ocp-variant }}
+                  ocp-version: ${{ env.OCP_VERSION }}
 
     addons-win-mac:
-        name: Build OCP addons for ${{ matrix.python-version }} on ${{ matrix.os }}
+        name: Build OCP addons (${{ matrix.ocp-variant }}) for ${{ matrix.python-version }} on ${{ matrix.os }}
         runs-on: ${{ matrix.os }}
         strategy:
             fail-fast: false
             matrix:
                 os: ["macos-15-intel", "macos-15", "windows-2022"]
                 python-version: ["3.10", "3.11", "3.12", "3.13", "3.14"]
+                ocp-variant: ["novtk", "vtk"]
                 include:
                     - os: "macos-15"
                       shells: "bash"
@@ -63,6 +70,9 @@ jobs:
                       shells: "bash"
                     - os: "windows-2022"
                       shells: "bash cmd.exe"
+                exclude:
+                    - python-version: "3.14"
+                      ocp-variant: "vtk"
         steps:
             - uses: actions/checkout@v4
 
@@ -81,6 +91,8 @@ jobs:
                   python-version: ${{ matrix.python-version }}
                   shells: ${{ matrix.shells }}
                   wheel-version: ${{ steps.get_version.outputs.value }}
+                  ocp-variant: ${{ matrix.ocp-variant }}
+                  ocp-version: ${{ env.OCP_VERSION }}
 
     tests:
         name: Test OCP Addons for ${{ matrix.python-version }} on ${{ matrix.os }} with ${{ matrix.ocp-package }}
@@ -107,6 +119,10 @@ jobs:
                       runner: ubuntu-24.04-arm
                     - os: "windows-2022"
                       runner: windows-2022
+                    - ocp-package: "cadquery_ocp_novtk"
+                      ocp-variant: "novtk"
+                    - ocp-package: "cadquery_ocp"
+                      ocp-variant: "vtk"
 
         steps:
             - uses: actions/checkout@v4
@@ -127,6 +143,7 @@ jobs:
                   wheel-version: ${{ steps.get_version.outputs.value }}
                   ocp-package: ${{ matrix.ocp-package }}
                   ocp-version: ${{ env.OCP_VERSION }}
+                  ocp-variant: ${{ matrix.ocp-variant }}
 
     release:
         name: Release wheels to repo

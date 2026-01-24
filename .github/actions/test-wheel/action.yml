@@ -16,6 +16,9 @@ inputs:
   ocp-version:
     description: "OCP package version to install"
     required: true
+  ocp-variant:
+    description: "OCP variant (novtk or vtk) - must match the wheel being tested"
+    required: true
 
 runs:
   using: "composite"
@@ -36,7 +39,7 @@ runs:
     - name: Download ocp-addons wheel
       uses: actions/download-artifact@v4
       with:
-        name: ocp-addons-${{ inputs.wheel-version }}-wheel-${{ inputs.os }}-cp${{ inputs.python-version }}
+        name: ocp-addons-${{ inputs.wheel-version }}-${{ inputs.ocp-variant }}-wheel-${{ inputs.os }}-cp${{ inputs.python-version }}
         path: wheels
 
     # - - -
@@ -48,7 +51,7 @@ runs:
 
         uv pip install ${{ inputs.ocp-package }}==${{ inputs.ocp-version }}
         uv pip install wheels/ocp_addons-*.whl
-        uv pip install pytest
+        uv pip install pytest numpy
 
         uv pip list
 
