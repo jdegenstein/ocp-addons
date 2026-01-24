@@ -52,8 +52,8 @@ runs:
 
         uv pip list
 
-        python -c "import OCP; print('Success: OCP', OCP.__version__)"
-        python -c "import ocp_addons; print('Success: ocp-addons serializer:', ocp_addons.serializer._test())"
+        uv run --no-project python -c "import OCP; print('Success: OCP', OCP.__version__)"
+        uv run --no-project python -c "import ocp_addons; print('Success: ocp-addons serializer:', ocp_addons.serializer._test())"
 
     # - - -
 
@@ -62,4 +62,4 @@ runs:
       run: |
         # Run tests
 
-        pytest -v
+        uv run --no-project pytest -v
