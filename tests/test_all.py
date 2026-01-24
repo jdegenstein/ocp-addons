@@ -1,10 +1,14 @@
 from pathlib import Path
 from time import time
 
+import numpy as np
 import pytest
 
 from ocp_addons.tessellator import tessellate
 from ocp_addons import serializer
+
+# Import ocp_tessellate for comparison tests
+from ocp_tessellate.tessellator import Tessellator as PythonTessellator
 
 from OCP.BRepPrimAPI import BRepPrimAPI_MakeBox
 from OCP.BRepFilletAPI import BRepFilletAPI_MakeFillet
@@ -527,6 +531,140 @@ def test_box_imported_from_stl():
 
     # Cleanup
     Path("box.stl").unlink(missing_ok=True)
+
+
+# =============================================================================
+# Comparison tests: ocp_addons vs ocp_tessellate (Python implementation)
+# =============================================================================
+
+def compare_tessellation(shape, deflection, angular_tolerance):
+    """
+    Compare tessellation results from ocp_addons (C++) vs ocp_tessellate (Python).
+    Returns True if results match within tolerance.
+    """
+    # C++ tessellation (ocp_addons)
+    cpp_result = tessellate(
+        shape,
+        deflection,
+        angular_tolerance,
+        compute_faces=True,
+        compute_edges=True,
+        parallel=True,
+        debug=0,
+        timeit=False,
+    )
+
+    # Python tessellation (ocp_tessellate)
+    py_tess = PythonTessellator("test")
+    py_tess.compute(shape, deflection, angular_tolerance, compute_faces=True, compute_edges=True, debug=False)
+
+    # Compare results
+    results = {}
+
+    # Vertices
+    cpp_vertices = np.array(cpp_result.vertices)
+    py_vertices = py_tess.get_vertices()
+    results["vertices_match"] = np.allclose(cpp_vertices, py_vertices, rtol=1e-5, atol=1e-6)
+    results["vertices_len"] = (len(cpp_vertices), len(py_vertices))
+
+    # Normals
+    cpp_normals = np.array(cpp_result.normals)
+    py_normals = py_tess.get_normals()
+    results["normals_match"] = np.allclose(cpp_normals, py_normals, rtol=1e-5, atol=1e-6)
+    results["normals_len"] = (len(cpp_normals), len(py_normals))
+
+    # Triangles
+    cpp_triangles = np.array(cpp_result.triangles)
+    py_triangles = py_tess.get_triangles()
+    results["triangles_match"] = np.array_equal(cpp_triangles, py_triangles)
+    results["triangles_len"] = (len(cpp_triangles), len(py_triangles))
+
+    # Face types
+    cpp_face_types = np.array(cpp_result.face_types)
+    py_face_types = py_tess.get_face_types()
+    results["face_types_match"] = np.array_equal(cpp_face_types, py_face_types)
+    results["face_types_len"] = (len(cpp_face_types), len(py_face_types))
+
+    # Triangles per face
+    cpp_tpf = np.array(cpp_result.triangles_per_face)
+    py_tpf = py_tess.get_triangles_per_face()
+    results["triangles_per_face_match"] = np.array_equal(cpp_tpf, py_tpf)
+    results["triangles_per_face_len"] = (len(cpp_tpf), len(py_tpf))
+
+    # Edges/segments (Python returns shape (N,2,3), C++ returns flat array)
+    cpp_edges = np.array(cpp_result.segments)
+    py_edges = py_tess.get_edges().flatten()
+    results["edges_match"] = np.allclose(cpp_edges, py_edges, rtol=1e-5, atol=1e-6)
+    results["edges_len"] = (len(cpp_edges), len(py_edges))
+
+    # Object vertices
+    cpp_obj_vertices = np.array(cpp_result.obj_vertices)
+    py_obj_vertices = py_tess.get_obj_vertices().flatten() if len(py_tess.get_obj_vertices()) > 0 else py_tess.get_obj_vertices()
+    results["obj_vertices_match"] = np.allclose(cpp_obj_vertices, py_obj_vertices, rtol=1e-5, atol=1e-6) if len(cpp_obj_vertices) > 0 else len(py_obj_vertices) == 0
+    results["obj_vertices_len"] = (len(cpp_obj_vertices), len(py_obj_vertices))
+
+    return results
+
+
+def test_compare_simple_box():
+    """Compare tessellation of simple box: ocp_addons vs ocp_tessellate"""
+    box = BRepPrimAPI_MakeBox(gp_Pnt(-0.5, -1.0, -1.5), 1.0, 2.0, 3.0).Shape()
+
+    results = compare_tessellation(box, 0.002, 0.3)
+
+    # Verify lengths match
+    assert results["vertices_len"][0] == results["vertices_len"][1], f"Vertices length mismatch: {results['vertices_len']}"
+    assert results["triangles_len"][0] == results["triangles_len"][1], f"Triangles length mismatch: {results['triangles_len']}"
+    assert results["face_types_len"][0] == results["face_types_len"][1], f"Face types length mismatch: {results['face_types_len']}"
+
+    # Verify values match
+    assert results["vertices_match"], "Vertices values don't match"
+    assert results["normals_match"], "Normals values don't match"
+    assert results["triangles_match"], "Triangles values don't match"
+    assert results["face_types_match"], "Face types don't match"
+    assert results["triangles_per_face_match"], "Triangles per face don't match"
+    assert results["edges_match"], "Edges values don't match"
+    assert results["obj_vertices_match"], "Object vertices don't match"
+
+
+def test_compare_deserialized_box():
+    """Compare tessellation of deserialized box: ocp_addons vs ocp_tessellate"""
+    file = Path("examples") / "b123.brep"
+
+    with open(file, "rb") as f:
+        shape = serializer.deserialize_shape(f.read())
+
+    results = compare_tessellation(shape, 0.002, 0.3)
+
+    # Verify lengths match
+    assert results["vertices_len"][0] == results["vertices_len"][1], f"Vertices length mismatch: {results['vertices_len']}"
+    assert results["triangles_len"][0] == results["triangles_len"][1], f"Triangles length mismatch: {results['triangles_len']}"
+
+    # Verify values match
+    assert results["vertices_match"], "Vertices values don't match"
+    assert results["normals_match"], "Normals values don't match"
+    assert results["triangles_match"], "Triangles values don't match"
+    assert results["face_types_match"], "Face types don't match"
+    assert results["edges_match"], "Edges values don't match"
+
+
+def test_compare_large_rc_object():
+    """Compare tessellation of large RC object: ocp_addons vs ocp_tessellate"""
+    file = Path("examples") / "rc.brep"
+
+    with open(file, "rb") as f:
+        shape = serializer.deserialize_shape(f.read())
+
+    results = compare_tessellation(shape, 0.19, 0.3)
+
+    # Verify lengths match
+    assert results["vertices_len"][0] == results["vertices_len"][1], f"Vertices length mismatch: {results['vertices_len']}"
+    assert results["triangles_len"][0] == results["triangles_len"][1], f"Triangles length mismatch: {results['triangles_len']}"
+
+    # Verify values match
+    assert results["vertices_match"], "Vertices values don't match"
+    assert results["normals_match"], "Normals values don't match"
+    assert results["triangles_match"], "Triangles values don't match"
 
 
 if __name__ == "__main__":
