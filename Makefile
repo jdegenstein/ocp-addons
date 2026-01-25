@@ -1,6 +1,7 @@
 .PHONY:  clean clean-windows wheel-linux wheel-macos wheel-windows
 
 VERSION := $(shell python -c "import toml; print(toml.load('pyproject.toml')['project']['version'])")
+PKG_NAME := $(shell python -c "import toml; print(toml.load('pyproject.toml')['project']['name'])")
 MODULES := tessellator serializer
 
 ifeq ($(OS),Windows_NT)
@@ -20,22 +21,22 @@ wheel-macos: clean
 	MACOSX_DEPLOYMENT_TARGET=11.0 CXX=clang++ python -m build -n -w
 
 	python -m wheel unpack dist/*.whl
-	cd ocp_addons-$(VERSION) && python ../fix_libs.py $(MODULES) && cd ..
-	python -m wheel pack ocp_addons-$(VERSION)
+	cd $(PKG_NAME)-$(VERSION) && python ../fix_libs.py $(MODULES) && cd ..
+	python -m wheel pack $(PKG_NAME)-$(VERSION)
 	
 	mkdir -p wheelhouse
-	mv ocp_addons-$(VERSION)*.whl wheelhouse
+	mv $(PKG_NAME)-$(VERSION)*.whl wheelhouse
 
 wheel-linux: clean
 	pip install patchelf
 	CXX=g++-9 python -m build -n -w
 
 	python -m wheel unpack dist/*.whl
-	cd ocp_addons-$(VERSION) && python ../fix_libs.py $(MODULES) && cd ..
-	python -m wheel pack ocp_addons-$(VERSION)
+	cd $(PKG_NAME)-$(VERSION) && python ../fix_libs.py $(MODULES) && cd ..
+	python -m wheel pack $(PKG_NAME)-$(VERSION)
 	
 	mkdir -p wheelhouse
-	mv ocp_addons-$(VERSION)*.whl wheelhouse
+	mv $(PKG_NAME)-$(VERSION)*.whl wheelhouse
 
 wheel-windows: SHELL:=cmd.exe
 wheel-windows: .SHELLFLAGS:=/C
@@ -46,20 +47,20 @@ wheel-windows: clean-windows
 	python -m build -n -w
 
 	for %%i in (dist\*.whl) do python -m wheel unpack %%i
-	cd ocp_addons-$(VERSION) && python ..\fix_libs.py $(MODULES) && cd ..
-	python -m wheel pack ocp_addons-$(VERSION)
+	cd $(PKG_NAME)-$(VERSION) && python ..\fix_libs.py $(MODULES) && cd ..
+	python -m wheel pack $(PKG_NAME)-$(VERSION)
 	
 	mkdir wheelhouse
-	copy ocp_addons-$(VERSION)*.whl wheelhouse
+	copy $(PKG_NAME)-$(VERSION)*.whl wheelhouse
 
 clean:
-	rm -fr ocp_addons.egg-info build dist libs ocp_addons-$(VERSION) test
+	rm -fr ocp_addons.egg-info build dist libs $(PKG_NAME)-$(VERSION) test
 
 clean-wheelhouse:
 	rm -fr wheelhouse
 
 clean-windows:
-	rmdir /S /Q ocp_addons.egg-info build dist libs ocp_addons-$(VERSION) test  2> NUL || exit 0
+	rmdir /S /Q ocp_addons.egg-info build dist libs $(PKG_NAME)-$(VERSION) test  2> NUL || exit 0
 
 clean-wheelhouse-windows:
 	rmdir /S /Q wheelhouse  2> NUL || exit 0
