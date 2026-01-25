@@ -21,9 +21,9 @@ wheel-macos: clean
 	MACOSX_DEPLOYMENT_TARGET=11.0 CXX=clang++ python -m build -n -w
 
 	python -m wheel unpack dist/*.whl
-	cd $(PKG_NAME)-$(VERSION) && python ../fix_libs.py $(MODULES) && cd ..
+	cd $(PKG_NAME)-$(VERSION) && python ../fix_libs.py $(PKG_NAME) $(MODULES) && cd ..
 	python -m wheel pack $(PKG_NAME)-$(VERSION)
-	
+
 	mkdir -p wheelhouse
 	mv $(PKG_NAME)-$(VERSION)*.whl wheelhouse
 
@@ -32,9 +32,9 @@ wheel-linux: clean
 	CXX=g++-9 python -m build -n -w
 
 	python -m wheel unpack dist/*.whl
-	cd $(PKG_NAME)-$(VERSION) && python ../fix_libs.py $(MODULES) && cd ..
+	cd $(PKG_NAME)-$(VERSION) && python ../fix_libs.py $(PKG_NAME) $(MODULES) && cd ..
 	python -m wheel pack $(PKG_NAME)-$(VERSION)
-	
+
 	mkdir -p wheelhouse
 	mv $(PKG_NAME)-$(VERSION)*.whl wheelhouse
 
@@ -47,7 +47,7 @@ wheel-windows: clean-windows
 	python -m build -n -w
 
 	for %%i in (dist\*.whl) do python -m wheel unpack %%i
-	cd $(PKG_NAME)-$(VERSION) && python ..\fix_libs.py $(MODULES) && cd ..
+	cd $(PKG_NAME)-$(VERSION) && python ..\fix_libs.py $(PKG_NAME) $(MODULES) && cd ..
 	python -m wheel pack $(PKG_NAME)-$(VERSION)
 	
 	mkdir wheelhouse

@@ -81,15 +81,18 @@ elif platform.system() == "Windows":
     so_file = next(Path.glob(Path.cwd(), "ocp_addons.cp*.pyd"))
 
 # Build package tree
+# First argument is package name, rest are module names
+pkg_name = sys.argv[1]  # e.g., "ocp_addons" or "ocp_addons_novtk"
+modules = sys.argv[2:]  # e.g., ["tessellator", "serializer"]
 
-target = Path("ocp_addons")
+target = Path(pkg_name)
 Path.mkdir(target, exist_ok=True)
 
 shutil.move(so_file, target)
 
 with open(target / "__init__.py", "w") as fd:
     if platform.system() == "Windows":
-        fd.write("""
+        fd.write(f"""
 def _ocpmodules():
     import os
 
@@ -102,12 +105,12 @@ def _ocpmodules():
             break
 _ocpmodules()
 del _ocpmodules
-from ocp_addons.ocp_addons import *""")
+from {pkg_name}.ocp_addons import *""")
 
     else:
-        fd.write("""from ocp_addons.ocp_addons import *""")
+        fd.write(f"""from {pkg_name}.ocp_addons import *""")
 
-for module in sys.argv[1:]:
+for module in modules:
     Path.mkdir(target / module, exist_ok=True)
     p2 = Path(target / module)
     with open(p2 / "__init__.py", "w") as f:
